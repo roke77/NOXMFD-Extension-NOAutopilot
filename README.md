@@ -6,17 +6,17 @@
 
 Adds an **AP** page under [NOXMFD](https://github.com/roke77/NOXMFD)'s EXT nav that shows and
 controls the [NOAutopilot](https://github.com/qwerty1423/no-autopilot-mod) mod from the MFD
-instead of its in-game F8 window, and lets the autopilot fly the route built on NOXMFD's WPT page.
-Requested in [roke77/NOXMFD#86](https://github.com/roke77/NOXMFD/issues/86).
+instead of its in-game F8 window. Requested in
+[roke77/NOXMFD#86](https://github.com/roke77/NOXMFD/issues/86).
 
-Planned features:
+Planned in two phases:
 
-- **Autopilot status**: engaged, nav mode, autothrottle, GCAS, auto-jammer, and ALS annunciators,
-  plus current and target altitude, speed, course, and bank.
-- **Autopilot controls**: set targets, apply, engage/disengage, and toggle GCAS, autothrottle,
-  auto-jammer, and autoland. Click/touch only; NOAutopilot's own keybinds stay as they are.
-- **Fly the WPT route**: couple NOAutopilot's nav mode to NOXMFD's active route, with direct-to
-  and loop.
+- **Phase 1 — AP page**: a visible UI for NOAutopilot's existing features. Status annunciators,
+  current and target altitude, speed, course, and bank, apply and engage/disengage, NOAutopilot's
+  own nav mode, and the GCAS, autothrottle, auto-jammer, and autoland toggles. Click/touch only;
+  NOAutopilot's own keybinds stay as they are.
+- **Phase 2 — NOXMFD integration**: starting with flying NOXMFD's WPT route, with direct-to and
+  loop.
 
 Built entirely through NOXMFD's public extension API (see NOXMFD's
 [`EXTENSIONS.md`](https://github.com/roke77/NOXMFD/blob/main/EXTENSIONS.md)). This repo does

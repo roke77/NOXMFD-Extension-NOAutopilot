@@ -2,11 +2,18 @@
 
 ## Status
 
-Planning. Nothing is built yet. NOXMFD's side of the integration shipped in
+Planning. Nothing is built yet. The project runs in two phases:
+
+- **Phase 1 — AP page.** A full MFD page that gives a visible UI to NOAutopilot's existing
+  features: status, targets, engage/disengage, its own nav mode, GCAS, autothrottle, auto-jammer,
+  and autoland. Nothing from NOXMFD's MAP or WPT is fed to the autopilot.
+- **Phase 2 — NOXMFD integration.** Couple the autopilot to NOXMFD features, starting with flying
+  NOXMFD's WPT route.
+
+NOXMFD's side of Phase 2 already shipped in
 [NOXMFD 0.58.0](https://github.com/roke77/NOXMFD/releases/tag/0.58.0) (extension API version 7:
 the WPT route reads and `SetActiveRouteNextIndex`, see NOXMFD's `docs/extensions-api.md`
-section 8). Everything else in this plan lives in this repo and needs no further NOXMFD core
-change. This plan was checked against NOAutopilot 5.5.3.
+section 8). Phase 1 needs no NOXMFD core change. This plan was checked against NOAutopilot 5.5.3.
 
 ## Source ticket
 
@@ -27,7 +34,7 @@ screen, which is awkward in VR or a sim pit. That is the main reason to put it o
 |---|---|
 | Autopilot | Altitude hold, climb/descent to a target at a rate limit, wing leveller, bank-angle hold, course hold. Per-aircraft PID profiles. Stick input past a threshold disengages it. |
 | Autothrottle | Speed hold in the game's units or Mach. |
-| Nav mode | Flies a queue of map waypoints (right-click on the map). |
+| Nav mode | Flies a queue of waypoints placed by right-clicking the in-game map. |
 | ALS | Autoland, using the AI landing logic. Planes only. |
 | Auto-GCAS | Warns, then pulls up before ground impact. On by default. |
 | Auto-jammer | Fires selected jammer pods whenever the capacitor is full and a target is selected. |
@@ -41,20 +48,21 @@ NOAutopilot has no API for other mods. Its live state is one public static class
 extension reaches them by reflection, so there is no compile-time dependency on NOAutopilot and
 the extension still loads when it's absent or has changed shape.
 
-| Need | NOAutopilot member | Access |
-|---|---|---|
-| Engaged | `APData.Enabled` | read/write |
-| Targets | `APData.TargetAlt` (m, `-1` = off), `TargetSpeed` (m/s or Mach, `-1` = off), `TargetCourse` (deg, `-1` = off), `TargetRoll` (deg, `-999` = off), `CurrentMaxClimbRate` (m/s) | read/write |
-| Speed unit | `APData.SpeedHoldIsMach` | read/write |
-| Apply typed targets | `APData.UseSetValues = true` alongside `Enabled = true` | write |
-| Nav | `APData.NavEnabled`, `APData.NavQueue` (`List<Vector3>`, global coordinates) | read/write |
-| GCAS | `APData.GCASEnabled`, `GCASWarning`, `GCASActive` | read, write `GCASEnabled` |
-| Auto-jammer | `APData.AutoJammerActive` | read/write |
-| ALS | `APData.ALSActive`, `ALSStatusText` | read |
-| Start autoland | `Plugin.StartAutoland()` | **private**, reflection only |
-| Refresh F8 window and map markers | `Plugin.SyncMenuValues()`, `Plugin.RefreshNavVisuals()` | public static |
-| Current state | `APData.CurrentAlt`, `CurrentRoll`, `PlayerRB`, `LocalAircraft` | read |
-| Broken flag | `Plugin.IsBroken` | read |
+| Need | NOAutopilot member | Access | Phase |
+|---|---|---|---|
+| Engaged | `APData.Enabled` | read/write | 1 |
+| Targets | `APData.TargetAlt` (m, `-1` = off), `TargetSpeed` (m/s or Mach, `-1` = off), `TargetCourse` (deg, `-1` = off), `TargetRoll` (deg, `-999` = off), `CurrentMaxClimbRate` (m/s) | read/write | 1 |
+| Speed unit | `APData.SpeedHoldIsMach` | read/write | 1 |
+| Apply typed targets | `APData.UseSetValues = true` alongside `Enabled = true` | write | 1 |
+| Nav mode | `APData.NavEnabled`, `APData.NavQueue` (`List<Vector3>`, global coordinates) | read, write `NavEnabled`, remove entries | 1 |
+| GCAS | `APData.GCASEnabled`, `GCASWarning`, `GCASActive` | read, write `GCASEnabled` | 1 |
+| Auto-jammer | `APData.AutoJammerActive` | read/write | 1 |
+| ALS | `APData.ALSActive`, `ALSStatusText` | read | 1 |
+| Start autoland | `Plugin.StartAutoland()` | **private**, reflection only | 1 |
+| Refresh F8 window and map markers | `Plugin.SyncMenuValues()`, `Plugin.RefreshNavVisuals()` | public static | 1 |
+| Current state | `APData.CurrentAlt`, `CurrentRoll`, `PlayerRB`, `LocalAircraft` | read | 1 |
+| Broken flag | `Plugin.IsBroken` | read | 1 |
+| Replace the nav queue | `APData.NavQueue` | write | 2 |
 
 Two NOAutopilot behaviors shape the design:
 
@@ -65,31 +73,57 @@ Two NOAutopilot behaviors shape the design:
 - **Its waypoint sequencing doesn't match NOXMFD's.** NOAutopilot pops `NavQueue[0]` within
   2,500 m, or when the point is behind the aircraft and within 10 km (`NavReachDistance`/
   `NavPassedDistance`). With "Cycle wp" on (the default), it re-appends the reached point to the
-  end of the queue. NOXMFD advances at 1,000 m. See decision 3.
+  end of the queue. NOXMFD advances at 1,000 m. This only matters in Phase 2 (decision 3).
 
 ## Prototype mockup
 
 An early prototype of the page, in NOXMFD's own theme (HUD green, amber for pending/selected,
-Share Tech Mono). Values are illustrative.
+Share Tech Mono). Values are illustrative. It shows the finished Phase 2 page: in Phase 1 the WPT
+route panel is replaced by NOAutopilot's own nav mode panel (see [Phase 1](#phase-1--ap-page)).
 
 ![AP page mockup](images/ap-page-mockup.png)
 
-Top to bottom:
+## Phase 1 — AP page
+
+Goal: every in-flight control from NOAutopilot's F8 window and keybinds is visible and usable on
+the MFD, by click or touch. The page shows only what NOAutopilot already does. It reads nothing
+from NOXMFD's MAP or WPT and never writes to `NavQueue` except to remove points, as the F8 window
+does.
+
+Page layout, top to bottom:
 
 1. **Annunciator strip.** AP ENGD, NAV, A/THR, GCAS, JAM, ALS. GCAS steps through `GCAS ARM`
    (green, `GCASEnabled`), amber on `GCASWarning`, and red `PULL UP` on `GCASActive`.
 2. **Target tiles.** ALT, SPD (KT/M toggle), CRS (HOLD/CLR), and BANK with the VS limit. Each shows
    the current value large and the target below. −/+ (or tapping the value for a keypad) edits a
    pending target, shown in amber.
-3. **APPLY / DISENGAGE / SYNC.** APPLY commits all pending targets at once, like the F8 window's
-   Apply, so stepping altitude doesn't jerk the aircraft on every tap. SYNC loads current
-   altitude, speed and course into the pending targets.
-4. **WPT route panel.** The active route from NOXMFD, with completed waypoints dimmed and the next
-   one highlighted. COUPLE/DECOUPLE, DIRECT-TO, LOOP.
+3. **APPLY / ENGAGE-DISENGAGE / SYNC.** APPLY commits all pending targets at once, like the F8
+   window's Apply, so stepping altitude doesn't jerk the aircraft on every tap. ENGAGE/DISENGAGE
+   copies the F8 button's side effects. SYNC loads current altitude, speed and course into the
+   pending targets.
+4. **Nav mode panel.** NOAutopilot's own waypoint queue, as placed on the in-game map: NAV on/off,
+   waypoint count, distance and ETA to the next point, total distance, and SKIP (drop the next
+   point), UNDO (drop the last point), and CLEAR, matching the F8 window's buttons. Points are still
+   placed on the in-game map through NOAutopilot itself.
 5. **System toggles.** GCAS, A/THR, AUTO-JAM, ALS LAND (two-tap confirm), and the ALS status text.
 6. **Footer.** NOAutopilot version and link state: `LINKED`, `NOT INSTALLED`, or `INCOMPATIBLE`.
+   With NOAutopilot missing or incompatible, the controls are greyed out and the page says why.
 
-## Route coupling
+Suggested build order within Phase 1:
+
+1. **Read-only.** Plugin skeleton, `NoApBridge` in read-only mode, the published slice, and the page
+   showing annunciators, current/target values, nav queue state, and link state. This proves
+   reflection against the live game with no way to affect the aircraft.
+2. **Controls.** Target tiles with pending/APPLY, engage/disengage, SYNC, KT/M, the nav panel's
+   buttons, the GCAS/A/THR/AUTO-JAM toggles, and ALS LAND through the private `StartAutoland`.
+
+## Phase 2 — NOXMFD integration
+
+Goal: tie the autopilot into NOXMFD's own features. The first item is flying NOXMFD's WPT route;
+the page's nav panel gains the WPT route view and COUPLE/DIRECT-TO/LOOP/DECOUPLE from the mockup.
+Further integration candidates are open (see [Open questions](#open-questions)).
+
+### Route coupling
 
 NOXMFD's WPT route is the source of truth. `NavQueue` is a copy of it that the extension keeps in
 sync.
@@ -117,7 +151,8 @@ sync.
 
 - **One BepInEx plugin**: `[BepInDependency("com.roque.NOXMFD", MinimumVersion = "0.58.0")]`
   (hard) and `[BepInDependency("com.qwerty1423.NOAutopilot", BepInDependency.DependencyFlags.SoftDependency)]`
-  (soft, for load order only).
+  (soft, for load order only). Phase 1 uses only registration, telemetry, and commands, but pins
+  0.58.0 from the start so Phase 2 doesn't raise the requirement.
 - **`NoApBridge`**: resolves `APData`/`Plugin` members once, by reflection, on first use. Every
   lookup that fails is logged with the member name and puts the bridge in `INCOMPATIBLE` rather
   than throwing. It also reads `Plugin.IsBroken`.
@@ -125,34 +160,15 @@ sync.
   extension command handler, which NOXMFD already runs on the main thread. Nothing touches
   `APData` from the HTTP worker.
 - **Telemetry**: `Api.PublishSlice("noap", json)` at NOXMFD's 10 Hz frame rate. The payload
-  carries link state, annunciators, current/target values, coupling state, and the route snapshot
-  with its revision.
-- **Commands**: one flat JSON envelope `{cmd, …}` posted to `/ext/noap/command` (`apply`,
-  `engage`, `disengage`, `sync`, `toggle`, `couple`, `decouple`, `direct-to`, `loop`, `als`). The
-  handler validates every value at this trust boundary (finite numbers, sane ranges, known
-  commands) before writing anything to `APData`.
+  carries link state, annunciators, current/target values, and nav queue state. Phase 2 adds
+  coupling state and the route snapshot with its revision.
+- **Commands**: one flat JSON envelope `{cmd, …}` posted to `/ext/noap/command`. Phase 1: `apply`,
+  `engage`, `disengage`, `sync`, `toggle`, `nav-skip`, `nav-undo`, `nav-clear`, `als`. Phase 2 adds
+  `couple`, `decouple`, `direct-to`, `loop`. The handler validates every value at this trust
+  boundary (finite numbers, sane ranges, known commands) before writing anything to `APData`.
 - **Page**: `src/web/noap.{html,css,js}`, embedded in the DLL, reusing NOXMFD's
   `/assets/shared/theme.css` and `font.css`. Units follow the game's metric/imperial setting,
   like NOAutopilot's own UI.
-
-## Recommended phasing
-
-### Phase 1 — read-only status
-
-The plugin skeleton, `NoApBridge` in read-only mode, the published slice, and the page showing the
-annunciator strip, current/target values, and link state. This proves reflection against the live
-game with no way to affect the aircraft.
-
-### Phase 2 — controls
-
-Target tiles with pending/APPLY, engage/disengage with the F8 window's side effects, SYNC, the KT/M
-toggle, and the GCAS/A/THR/AUTO-JAM toggles. ALS LAND through the private `StartAutoland` with a
-two-tap confirm.
-
-### Phase 3 — route coupling
-
-COUPLE/DECOUPLE, re-sync on `RouteRevision`, advance mirroring, DIRECT-TO, and LOOP, as described in
-[Route coupling](#route-coupling). Needs NOXMFD 0.58.0.
 
 ## Design decisions
 
@@ -162,10 +178,10 @@ COUPLE/DECOUPLE, re-sync on `RouteRevision`, advance mirroring, DIRECT-TO, and L
 2. **Reflection, no compile-time reference.** NOAutopilot is optional, often banned by hosts, and
    its author calls the code due for a rewrite. Reflection with a logged `INCOMPATIBLE` state keeps
    NOXMFD and the page working when NOAutopilot is missing or changes.
-3. **NOXMFD owns route progress.** Two independent sequencers would drift apart (2,500 m/passed
-   versus 1,000 m, plus "Cycle wp"). NOXMFD's `RouteStore` stays the single authority, and the
-   extension turns NOAutopilot's pops into `SetActiveRouteNextIndex` calls. LOOP is the
-   extension's, not NOAutopilot's "Cycle wp".
+3. **NOXMFD owns route progress (Phase 2).** Two independent sequencers would drift apart
+   (2,500 m/passed versus 1,000 m, plus "Cycle wp"). NOXMFD's `RouteStore` stays the single
+   authority, and the extension turns NOAutopilot's pops into `SetActiveRouteNextIndex` calls. LOOP
+   is the extension's, not NOAutopilot's "Cycle wp".
 4. **Click/touch only.** No new keybinds. NOAutopilot already has its own, and they keep working
    alongside the page.
 5. **Apply-to-commit.** Target edits are pending until APPLY, matching the F8 window and keeping
@@ -174,6 +190,8 @@ COUPLE/DECOUPLE, re-sync on `RouteRevision`, advance mirroring, DIRECT-TO, and L
    in-flight controls, and stay in BepInEx's ConfigurationManager.
 7. **No fuel page here.** Fuel time/range doesn't depend on NOAutopilot. If it's wanted, it
    belongs in NOXMFD itself as a separate ticket.
+8. **Phase 1 is NOAutopilot-only.** The first release is a UI for features NOAutopilot already has,
+   so it can ship and be tested on its own before any NOXMFD data drives the autopilot.
 
 ## Open questions
 
@@ -181,8 +199,12 @@ COUPLE/DECOUPLE, re-sync on `RouteRevision`, advance mirroring, DIRECT-TO, and L
   `StartAutoland` methods, instead of relying on reflection into `APData` and a private method?
 - Should the page also run while NOAutopilot's F8 window is open, or show a notice that both can
   edit the same targets?
-- Should COUPLE turn off NOAutopilot's "Cycle wp" for the session, or leave the player's config as
-  it is?
+- Phase 1: should the page also mirror the F8 window's remaining toggles ("Cycle wp", the
+  autothrottle's extreme-throttle option, the single-player FBW disabler), or leave them to F8/F1?
+- Phase 2: should COUPLE turn off NOAutopilot's "Cycle wp" for the session, or leave the player's
+  config as it is?
+- Phase 2: which NOXMFD integrations beyond route coupling are wanted (for example an AP cue on
+  NOXMFD's HUD page)?
 - Multiplayer: should the page show a warning banner in multiplayer sessions, given some hosts
   prohibit NOAutopilot?
 
