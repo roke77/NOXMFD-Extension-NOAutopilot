@@ -2,6 +2,7 @@
 
 [![NOXMFD](https://img.shields.io/badge/Requires-NOXMFD%200.58.0%2B-blue)](https://github.com/roke77/NOXMFD)
 ![Status](https://img.shields.io/badge/Status-Planning-lightgrey)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Adds an **AP** page under [NOXMFD](https://github.com/roke77/NOXMFD)'s EXT nav that shows and
 controls the [NOAutopilot](https://github.com/qwerty1423/no-autopilot-mod) mod from the MFD
