@@ -79,16 +79,23 @@ Two NOAutopilot behaviors shape the design:
   `NavPassedDistance`). With "Cycle wp" on (the default), it re-appends the reached point to the
   end of the queue. NOXMFD advances at 1,000 m. This only matters in Phase 2 (decision 3).
 
-## Prototype mockups
+## Page design
 
-Early prototypes of the page, one per phase, in NOXMFD's own theme (HUD green, amber for
-pending/selected, Share Tech Mono). Values are illustrative, and both show a multiplayer session
-(FBW OFF greyed out, host-rules note in the footer). The two differ only in the middle panel: Phase 1 shows NOAutopilot's own nav mode, Phase 2 replaces it with the coupled WPT route.
-Each is shown under its phase below.
+The page uses the **HUD tapes** design (`images/ap-page-mockup-alt-c2-hud-tapes-lit.png`, shown
+under Phase 1): speed, altitude and heading tapes laid out like the in-game HUD, a large AP ring in
+the centre, and every on/off control drawn as a lit pushbutton. It uses NOXMFD's own theme (HUD
+green, amber for pending, red for destructive, Share Tech Mono). Values are illustrative, and it
+shows a multiplayer session (FBW OFF locked, host-rules note in the footer).
+
+The other files in `images/` are alternatives that were considered: `alt-a-glareshield` (a
+real-jet autopilot panel with knobs), `alt-b-gauges` (round dials in NOXMFD's AVN style),
+`alt-c-hud-tapes` (the chosen layout with outlined toggles), and the `phase1`/`phase2` tile
+prototypes. The Phase 2 prototype shows the coupled WPT route controls the nav strip gains
+in Phase 2 (see Open questions).
 
 ## Phase 1 — AP page
 
-![AP page mockup, Phase 1](images/ap-page-mockup-phase1.png)
+![AP page design, Phase 1](images/ap-page-mockup-alt-c2-hud-tapes-lit.png)
 
 Goal: every in-flight control from NOAutopilot's F8 window and keybinds is visible and usable on
 the MFD, by click or touch. The page shows only what NOAutopilot already does. It reads nothing
@@ -97,26 +104,36 @@ does.
 
 Page layout, top to bottom:
 
-1. **Annunciator strip.** AP ENGD, NAV, A/THR, GCAS, JAM, ALS. GCAS steps through `GCAS ARM`
-   (green, `GCASEnabled`), amber on `GCASWarning`, and red `PULL UP` on `GCASActive`.
-2. **Target tiles.** ALT, SPD (KT/M toggle), CRS (HOLD/CLR), and BANK with the VS limit. Each shows
-   the current value large and the target below. −/+ (or tapping the value for a keypad) edits a
-   pending target, shown in amber.
-3. **APPLY / ENGAGE-DISENGAGE / SYNC.** APPLY commits all pending targets at once, like the F8
-   window's Apply, so stepping altitude doesn't jerk the aircraft on every tap. ENGAGE/DISENGAGE
-   copies the F8 button's side effects. SYNC loads current altitude, speed and course into the
-   pending targets.
-4. **Nav mode panel.** NOAutopilot's own waypoint queue, as placed on the in-game map: NAV on/off,
-   CYCLE WP, waypoint count, distance and ETA to the next point, total distance, and SKIP (drop the
-   next point), UNDO (drop the last point), and CLEAR, matching the F8 window's controls. Points are
-   still placed on the in-game map through NOAutopilot itself. CYCLE WP writes NOAutopilot's own
-   config entry, so it persists exactly as it does from F8.
+1. **Heading tape.** Across the top, with the current heading boxed in the centre and a bug for
+   the course target (green when set, amber while pending). ‹ › step the course target, HOLD holds
+   the current course, and CLR clears it.
+2. **Speed and altitude tapes.** Speed on the left and altitude on the right, like the HUD. Each
+   boxes the current value, marks the target with a bug on the tape (a chevron at the tape's end
+   when the target is off-scale), and shows the target above the tape. ▲ ▼ step a pending target,
+   shown in amber with a dot; tapping the target readout opens a keypad. KT/M sits under the speed
+   tape, and the V/S limit (−/+) under the altitude tape.
+3. **Centre.** A bank scale with the current roll pointer and the bank limit marked on both sides
+   (−/+ edit it). Under it, the **AP ring** engages and disengages, copying the F8 button's side
+   effects. Under the ring, **APPLY** commits all pending targets at once, like the F8 window's
+   Apply, so stepping altitude doesn't jerk the aircraft on every tap; its badge counts the pending
+   targets. **SYNC** loads current altitude, speed and course into the pending targets.
+4. **Nav strip.** NOAutopilot's own waypoint queue, as placed on the in-game map: NAV on/off, one
+   pip per waypoint with the next one in amber, distance and ETA to the next point, total distance
+   and time, then CYCLE WP, SKIP (drop the next point), UNDO (drop the last point) and CLEAR (red),
+   matching the F8 window's controls. Points are still placed on the in-game map through
+   NOAutopilot itself. CYCLE WP writes NOAutopilot's own config entry, so it persists exactly as it
+   does from F8.
 5. **System toggles.** GCAS, A/THR, AB/BRK (let the autothrottle use afterburner and airbrake),
-   AUTO-JAM, FBW OFF, and ALS LAND (two-tap confirm), plus the ALS status text. FBW OFF is greyed
-   out in multiplayer, where NOAutopilot refuses it.
-6. **Footer.** NOAutopilot version and link state: `LINKED`, `NOT INSTALLED`, or `INCOMPATIBLE`.
-   With NOAutopilot missing or incompatible, the controls are greyed out and the page says why. In
-   a multiplayer session, a `MULTIPLAYER · CHECK HOST RULES` note sits in the footer.
+   JAM (auto-jammer), FBW OFF, and ALS (autoland). FBW OFF shows a lock and is disabled in
+   multiplayer, where NOAutopilot refuses it. ALS sits under a striped guard and needs two taps.
+6. **Footer.** NOAutopilot version and link state (`LINKED`, `NOT INSTALLED`, or `INCOMPATIBLE`),
+   the ALS status text, and in a multiplayer session a `MP · HOST RULES` note. With NOAutopilot
+   missing or incompatible, the controls are greyed out and the page says why.
+
+Every on/off control (NAV, CYCLE WP, and the system toggles) is a lit pushbutton: a light bar that
+is green when on and dark when off. The page has no separate annunciator strip; the AP ring and
+the lit bars show which modes are active. GCAS's bar is green when armed (`GCASEnabled`), amber on
+`GCASWarning`, and red with `PULL UP` on `GCASActive`.
 
 The page works alongside NOAutopilot's F8 window with no lock or notice: both edit the same
 `APData`, the page always shows the live values, and the page calls `SyncMenuValues()` after each
@@ -125,10 +142,10 @@ write so F8 shows the page's edits too.
 Suggested build order within Phase 1:
 
 1. **Read-only.** Plugin skeleton, `NoApBridge` in read-only mode, the published slice, and the page
-   showing annunciators, current/target values, nav queue state, and link state. This proves
-   reflection against the live game with no way to affect the aircraft.
-2. **Controls.** Target tiles with pending/APPLY, engage/disengage, SYNC, KT/M, the nav panel's
-   buttons and CYCLE WP, the GCAS/A/THR/AB/BRK/AUTO-JAM/FBW OFF toggles, and ALS LAND through the
+   showing the tapes, mode lights, nav queue state, and link state. This proves reflection against
+   the live game with no way to affect the aircraft.
+2. **Controls.** Target steps with pending/APPLY, the AP ring, SYNC, KT/M, the nav strip's
+   buttons and CYCLE WP, the GCAS/A/THR/AB/BRK/JAM/FBW OFF toggles, and ALS through the
    private `StartAutoland`.
 
 ## Phase 2 — NOXMFD integration
@@ -136,8 +153,8 @@ Suggested build order within Phase 1:
 ![AP page mockup, Phase 2](images/ap-page-mockup-phase2.png)
 
 Goal: tie the autopilot into NOXMFD's own features. Two items are planned: flying NOXMFD's WPT
-route (the page's nav panel gains the WPT route view and COUPLE/DIRECT-TO/LOOP/DECOUPLE from the
-mockup), and drawing NOAutopilot's own nav queue on NOXMFD's MAP.
+route (the page's nav strip gains the WPT route view and COUPLE/DIRECT-TO/LOOP/DECOUPLE from the
+Phase 2 prototype), and drawing NOAutopilot's own nav queue on NOXMFD's MAP.
 
 ### Route coupling
 
@@ -190,7 +207,7 @@ can't draw their own points or lines. The API shape (for example
   extension command handler, which NOXMFD already runs on the main thread. Nothing touches
   `APData` from the HTTP worker.
 - **Telemetry**: `Api.PublishSlice("noap", json)` at NOXMFD's 10 Hz frame rate. The payload
-  carries link state, annunciators, current/target values, nav queue state, and the multiplayer
+  carries link state, mode states, current/target values, nav queue state, and the multiplayer
   flag. Phase 2 adds coupling state and the route snapshot with its revision.
 - **Commands**: one flat JSON envelope `{cmd, …}` posted to `/ext/noap/command`. Phase 1: `apply`,
   `engage`, `disengage`, `sync`, `toggle` (`gcas`, `athr`, `abbrk`, `jam`, `fbw`, `nav`,
@@ -230,10 +247,15 @@ can't draw their own points or lines. The API shape (for example
    `APData`, so neither can hold a stale copy.
 10. **Multiplayer note, not a warning.** A footer note in multiplayer sessions reminds the pilot to
     check host rules, without a banner or anything that blocks the page.
+11. **HUD tapes layout.** The page reads like the in-game HUD the pilot already scans, so targets
+    sit on familiar tapes instead of in separate tiles. Icons and lit pushbuttons carry the state,
+    which keeps text to short labels.
 
 ## Open questions
 
-None right now.
+- **Phase 2 route view in the HUD tapes layout.** The nav strip is one row high. Where the WPT
+  route view and COUPLE/DIRECT-TO/LOOP/DECOUPLE fit (a taller strip, a second page, or a panel
+  that replaces the tapes while coupled) is decided when Phase 2 starts.
 
 ## Out of scope
 
