@@ -75,15 +75,16 @@ Two NOAutopilot behaviors shape the design:
   `NavPassedDistance`). With "Cycle wp" on (the default), it re-appends the reached point to the
   end of the queue. NOXMFD advances at 1,000 m. This only matters in Phase 2 (decision 3).
 
-## Prototype mockup
+## Prototype mockups
 
-An early prototype of the page, in NOXMFD's own theme (HUD green, amber for pending/selected,
-Share Tech Mono). Values are illustrative. It shows the finished Phase 2 page: in Phase 1 the WPT
-route panel is replaced by NOAutopilot's own nav mode panel (see [Phase 1](#phase-1--ap-page)).
-
-![AP page mockup](images/ap-page-mockup.png)
+Early prototypes of the page, one per phase, in NOXMFD's own theme (HUD green, amber for
+pending/selected, Share Tech Mono). Values are illustrative. The two differ only in the middle
+panel: Phase 1 shows NOAutopilot's own nav mode, Phase 2 replaces it with the coupled WPT route.
+Each is shown under its phase below.
 
 ## Phase 1 — AP page
+
+![AP page mockup, Phase 1](images/ap-page-mockup-phase1.png)
 
 Goal: every in-flight control from NOAutopilot's F8 window and keybinds is visible and usable on
 the MFD, by click or touch. The page shows only what NOAutopilot already does. It reads nothing
@@ -118,6 +119,8 @@ Suggested build order within Phase 1:
    buttons, the GCAS/A/THR/AUTO-JAM toggles, and ALS LAND through the private `StartAutoland`.
 
 ## Phase 2 — NOXMFD integration
+
+![AP page mockup, Phase 2](images/ap-page-mockup-phase2.png)
 
 Goal: tie the autopilot into NOXMFD's own features. The first item is flying NOXMFD's WPT route;
 the page's nav panel gains the WPT route view and COUPLE/DIRECT-TO/LOOP/DECOUPLE from the mockup.
