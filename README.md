@@ -26,8 +26,37 @@ the page loads and says why it's inactive.
 
 ## Status
 
-Planning. See [`docs/noautopilot-plan.md`](docs/noautopilot-plan.md) for the design, the
-integration surface, and the phasing.
+Phase 1 in progress: the read-only AP page is built (status, targets, nav mode, and toggle states,
+with no controls yet). See [`docs/noautopilot-plan.md`](docs/noautopilot-plan.md) for the design,
+the integration surface, and the phasing.
+
+## What's here
+
+- `src/plugin/Plugin.cs` registers the **AP** EXT page and publishes NOAutopilot's state at 10 Hz.
+- `src/plugin/NoApBridge.cs` reads NOAutopilot by reflection and builds the published slice.
+- `src/plugin/NoApPageAssets.cs` serves the embedded `src/web/` files.
+- `src/web/noap.{html,css,js}` is the page; `noap-format.js` holds its unit and sentinel helpers,
+  checked by `node src/web/noap-format.test.js`.
+- `lib/NOXMFD.dll` is a compile-time reference only (`Private=false`), not shipped.
+
+## Building
+
+Requires a local Nuclear Option install with BepInEx 5 and NOXMFD. If the game isn't at the default
+Steam path, create a gitignored `GameDir.props` next to the `.csproj`:
+
+```xml
+<Project><PropertyGroup>
+  <GameDir>D:\SteamLibrary\steamapps\common\Nuclear Option</GameDir>
+</PropertyGroup></Project>
+```
+
+Then:
+
+```bash
+dotnet build NOAutopilotModule.csproj -c Release
+```
+
+The build copies `NOXMFD.NOAutopilotModule.dll` into `$(GameDir)\BepInEx\plugins\`.
 
 ## Requirements
 

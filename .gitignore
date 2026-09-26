@@ -1,0 +1,10 @@
+bin/
+obj/
+.vs/
+*.user
+
+# Local machine-specific game path override (see NOAutopilotModule.csproj)
+GameDir.props
+
+# Ad-hoc release artifacts (build zips, release notes drafts) — never committed.
+_scratch/

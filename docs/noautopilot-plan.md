@@ -2,7 +2,8 @@
 
 ## Status
 
-Planning. Nothing is built yet. The project runs in two phases:
+Phase 1 build step 1 (read-only) is built and awaiting its live-game check; step 2 (controls) is
+next. The project runs in two phases:
 
 - **Phase 1 — AP page.** A full MFD page that gives a visible UI to NOAutopilot's existing
   features: status, targets, engage/disengage, its own nav mode, GCAS, autothrottle, auto-jammer,

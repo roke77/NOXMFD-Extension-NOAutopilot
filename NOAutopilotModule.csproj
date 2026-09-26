@@ -1,0 +1,80 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    NOAutopilot Module: a standalone NOXMFD extension (see NOXMFD's EXTENSIONS.md) giving
+    NOAutopilot an MFD page. It never edits NOXMFD's or NOAutopilot's source: NOXMFD is consumed
+    through its public Api (the prebuilt lib\NOXMFD.dll), NOAutopilot only through reflection
+    (docs/noautopilot-plan.md decision 2), so there is no compile-time reference to it.
+
+    >>> SET YOUR GAME PATH <<<
+    GameDir must point at your Nuclear Option install on the machine that BUILDS this. Don't edit
+    the default below; create a local, gitignored GameDir.props next to this file instead:
+
+      <Project><PropertyGroup>
+        <GameDir>D:\SteamLibrary\steamapps\common\Nuclear Option</GameDir>
+      </PropertyGroup></Project>
+  -->
+  <Import Project="GameDir.props" Condition="Exists('GameDir.props')" />
+
+  <PropertyGroup>
+    <GameDir Condition="'$(GameDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Nuclear Option</GameDir>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>NOXMFD.NOAutopilotModule</AssemblyName>
+    <Product>NOXMFD: NOAutopilot Extension</Product>
+    <Description>AP page for NOXMFD that shows and controls the NOAutopilot mod</Description>
+    <Version>0.1.0</Version>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <RootNamespace>NoApModule</RootNamespace>
+    <DebugType>portable</DebugType>
+    <NoWarn>BepInEx002</NoWarn>
+    <RestoreAdditionalProjectSources>
+      https://api.nuget.org/v3/index.json;
+      https://nuget.bepinex.dev/v3/index.json;
+      https://nuget.samboy.dev/v3/index.json
+    </RestoreAdditionalProjectSources>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Resource names end in ".web.<file>", resolved by NoApPageAssets.cs's suffix match. -->
+    <EmbeddedResource Include="src\web\**\*" Exclude="src\web\**\*.md;src\web\**\*.test.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BepInEx.Core" Version="5.4.21" />
+    <PackageReference Include="BepInEx.PluginInfoProps" Version="2.1.0" />
+    <PackageReference Include="UnityEngine.Modules" Version="2022.3.6" IncludeAssets="compile" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Private=false: BepInEx already loads NOXMFD.dll itself, so bundling a second copy would
+         double-load the assembly. -->
+    <Reference Include="NOXMFD">
+      <HintPath>lib\NOXMFD.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- The game's own types (Aircraft, GlobalPosition, LevelInfo, PlayerSettings) for reading the
+         player's position and speed of sound; the game ships this, so it's never copied. -->
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(GameDir)\NuclearOption_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- Aircraft derives from Mirage's NetworkBehaviour, so the compiler needs it too. -->
+    <Reference Include="Mirage">
+      <HintPath>$(GameDir)\NuclearOption_Data\Managed\Mirage.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="DeployToGame" AfterTargets="Build">
+    <Copy
+      SourceFiles="$(OutputPath)$(AssemblyName).dll"
+      DestinationFolder="$(GameDir)\BepInEx\plugins"
+      OverwriteReadOnlyFiles="true" />
+    <Message Text="Deployed $(AssemblyName).dll to $(GameDir)\BepInEx\plugins" Importance="high" />
+  </Target>
+
+</Project>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>AP</title>
+  <link rel="stylesheet" href="/assets/shared/font.css">
+  <link rel="stylesheet" href="/assets/shared/theme.css">
+  <link rel="stylesheet" href="/ext/noap/noap.css">
+</head>
+<body>
+<div class="stage" id="stage">
+
+  <!-- Heading tape -->
+  <div class="hdg-row">
+    <button class="key key-txt" id="crs-clr">CLR</button>
+    <button class="key key-tall" id="crs-left" aria-label="Course left"><svg viewBox="0 0 24 24" class="ico"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <svg class="hdg-tape" viewBox="0 0 460 76" role="img" aria-label="Heading tape"><g id="hdg-g"></g></svg>
+    <button class="key key-tall" id="crs-right" aria-label="Course right"><svg viewBox="0 0 24 24" class="ico"><path d="M9 6l6 6-6 6"/></svg></button>
+    <button class="key key-txt" id="crs-hold">HOLD</button>
+  </div>
+
+  <div class="mid">
+    <!-- Speed tape -->
+    <div class="col col-spd">
+      <div class="tgt-read" id="spd-tgt">—</div>
+      <button class="key key-wide" id="spd-up" aria-label="Speed target up"><svg viewBox="0 0 24 24" class="ico ico-lg"><path d="M6 15l6-6 6 6"/></svg></button>
+      <svg class="tape" viewBox="0 0 140 330" role="img" aria-label="Speed tape"><g id="spd-g"></g></svg>
+      <button class="key key-wide" id="spd-dn" aria-label="Speed target down"><svg viewBox="0 0 24 24" class="ico ico-lg"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="seg" role="group" aria-label="Speed unit">
+        <button id="unit-a">KT</button><button id="unit-m">M</button>
+      </div>
+    </div>
+
+    <!-- Centre: bank scale, AP ring, apply/sync -->
+    <div class="centre">
+      <div class="bank-row">
+        <button class="key key-sq" id="bank-dn" aria-label="Bank limit down"><svg viewBox="0 0 24 24" class="ico ico-sm"><path d="M6 12h12"/></svg></button>
+        <svg class="bank" viewBox="0 0 200 91" role="img" aria-label="Bank scale">
+          <path class="bank-arc" d="M30.72 60A80 80 0 0 1 169.28 60"/>
+          <g class="bank-ticks">
+            <line x1="100" y1="20" x2="100" y2="7"/>
+            <line x1="113.9" y1="21.2" x2="115.6" y2="11.4"/><line x1="86.1" y1="21.2" x2="84.4" y2="11.4"/>
+            <line x1="127.4" y1="24.8" x2="130.8" y2="15.4"/><line x1="72.6" y1="24.8" x2="69.2" y2="15.4"/>
+            <line x1="140" y1="30.7" x2="145" y2="22.1"/><line x1="60" y1="30.7" x2="55" y2="22.1"/>
+            <line x1="156.6" y1="43.4" x2="163.6" y2="36.4"/><line x1="43.4" y1="43.4" x2="36.4" y2="36.4"/>
+            <line x1="169.3" y1="60" x2="177.9" y2="55"/><line x1="30.7" y1="60" x2="22.1" y2="55"/>
+          </g>
+          <g id="bank-g"></g>
+          <text class="bank-txt" x="100" y="84" text-anchor="middle" id="bank-txt">—</text>
+        </svg>
+        <button class="key key-sq" id="bank-up" aria-label="Bank limit up"><svg viewBox="0 0 24 24" class="ico ico-sm"><path d="M6 12h12M12 6v12"/></svg></button>
+      </div>
+
+      <div class="ring-halo">
+        <button class="ap-ring" id="ap-ring" aria-label="Autopilot">
+          <svg viewBox="0 0 24 24" class="ico ico-xl"><path d="M12 3v8"/><path d="M6.6 6.8a8 8 0 1 0 10.8 0"/></svg>
+          <span class="ap-big">AP</span>
+          <span class="ap-sub" id="ap-sub">OFF</span>
+        </button>
+      </div>
+
+      <div class="apply-row">
+        <button class="key act-apply" id="apply"><svg viewBox="0 0 24 24" class="ico"><path d="M5 12.5l4.5 4.5L19 7"/></svg>APPLY<span class="badge" id="apply-n" hidden>0</span></button>
+        <button class="key act-sync" id="sync"><svg viewBox="0 0 24 24" class="ico"><path d="M4 12a8 8 0 0 1 14-5.3"/><path d="M18 3v4h-4"/><path d="M20 12a8 8 0 0 1-14 5.3"/><path d="M6 21v-4h4"/></svg>SYNC</button>
+      </div>
+    </div>
+
+    <!-- Altitude tape -->
+    <div class="col col-alt">
+      <div class="tgt-read" id="alt-tgt">—</div>
+      <button class="key key-wide" id="alt-up" aria-label="Altitude target up"><svg viewBox="0 0 24 24" class="ico ico-lg"><path d="M6 15l6-6 6 6"/></svg></button>
+      <svg class="tape" viewBox="0 0 150 330" role="img" aria-label="Altitude tape"><g id="alt-g"></g></svg>
+      <button class="key key-wide" id="alt-dn" aria-label="Altitude target down"><svg viewBox="0 0 24 24" class="ico ico-lg"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="vs-row">
+        <button class="key key-sq" id="vs-dn" aria-label="Climb rate limit down"><svg viewBox="0 0 24 24" class="ico ico-sm"><path d="M6 12h12"/></svg></button>
+        <span class="vs-read"><span class="vs-lbl">V/S</span><span id="vs-val">—</span></span>
+        <button class="key key-sq" id="vs-up" aria-label="Climb rate limit up"><svg viewBox="0 0 24 24" class="ico ico-sm"><path d="M6 12h12M12 6v12"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav strip -->
+  <div class="nav-strip">
+    <button class="lit lit-row" id="nav"><span class="bar"></span><svg viewBox="0 0 24 24" class="ico"><path d="M5 19l5-8 5 3 4-9"/><circle cx="5" cy="19" r="1.5"/><circle cx="10" cy="11" r="1.5"/><circle cx="15" cy="14" r="1.5"/><circle cx="19" cy="5" r="1.5"/></svg>NAV</button>
+    <svg class="pips" viewBox="0 0 140 30" role="img" aria-label="Waypoints"><g id="pips-g"></g></svg>
+    <span class="nav-next"><span class="nav-next-d" id="nav-next">—</span><span class="nav-next-t" id="nav-next-eta"></span></span>
+    <span class="nav-total"><span class="nav-total-d" id="nav-total">Σ —</span><span class="nav-total-t" id="nav-total-eta"></span></span>
+    <span class="grow"></span>
+    <button class="lit lit-row" id="cycle" aria-label="Cycle waypoints"><span class="bar"></span><svg viewBox="0 0 24 24" class="ico ico-md"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg></button>
+    <button class="key key-sq48" id="skip" aria-label="Skip next waypoint"><svg viewBox="0 0 24 24" class="ico ico-md"><path d="M5 5l9 7-9 7z"/><path d="M18 5v14"/></svg></button>
+    <button class="key key-sq48" id="undo" aria-label="Undo last waypoint"><svg viewBox="0 0 24 24" class="ico ico-md"><path d="M9 6L4 11l5 5"/><path d="M4 11h11a5 5 0 0 1 0 10h-4"/></svg></button>
+    <button class="key key-sq48 danger" id="clear" aria-label="Clear all waypoints"><svg viewBox="0 0 24 24" class="ico ico-md"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+
+  <!-- System toggles -->
+  <div class="toggles">
+    <button class="lit lit-col" id="t-gcas"><span class="bar"></span><span class="lit-lbl"><svg viewBox="0 0 24 24" class="ico"><path d="M2 21l6-7 4 3 4-5 6 9z"/><path d="M12 11V3M8.5 6.5L12 3l3.5 3.5"/></svg><span id="t-gcas-txt">GCAS</span></span></button>
+    <button class="lit lit-col" id="t-athr"><span class="bar"></span><span class="lit-lbl"><svg viewBox="0 0 24 24" class="ico"><path d="M5 20h14"/><path d="M10 20V11l5-5"/><circle cx="16.5" cy="4.5" r="2"/></svg>A/THR</span></button>
+    <button class="lit lit-col" id="t-xthr" aria-label="Afterburner and airbrake for autothrottle"><span class="bar"></span><span class="lit-lbl"><svg viewBox="0 0 24 24" class="ico"><path d="M12 22c-4 0-7-3-7-7 0-4 4-6 4-11 3 2 6 5 6 9 1-1 2-2 2-4 2 2 2 4 2 6 0 4-3 7-7 7z"/></svg>AB/BRK</span></button>
+    <button class="lit lit-col" id="t-jam" aria-label="Auto jammer"><span class="bar"></span><span class="lit-lbl"><svg viewBox="0 0 24 24" class="ico"><path d="M13 2L5 13h6l-1 9 8-12h-6z"/></svg>JAM</span></button>
+    <button class="lit lit-col" id="t-fbw" aria-label="FBW off"><span class="bar"></span><span class="lit-lbl"><svg viewBox="0 0 24 24" class="ico fbw-lock"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><svg viewBox="0 0 24 24" class="ico fbw-wing"><path d="M2 14l10-4 10 4"/><path d="M12 10V4"/><path d="M8 20l4-3 4 3"/></svg>FBW</span></button>
+    <div class="guard"><button class="lit lit-col" id="t-als" aria-label="Autoland, guarded, tap twice"><span class="bar"></span><span class="lit-lbl"><svg viewBox="0 0 24 24" class="ico"><path d="M7 21l3-12h4l3 12"/><path d="M12 11v2M12 15v2M12 19v1"/><path d="M3 3l5 4M8 4v3H5"/></svg>ALS</span></button></div>
+  </div>
+
+  <div class="footer">
+    <span class="link"><span class="dot" id="link-dot"></span><span id="link-line">NOAP · WAITING</span></span>
+    <span class="als-text" id="als-text">ALS —</span>
+    <span class="mp-note" id="mp-note" hidden>MP · HOST RULES</span>
+  </div>
+
+  <div class="notice" id="notice" hidden></div>
+</div>
+
+<div class="mfd-empty" id="no-mission">
+  <span class="mfd-empty-title">AP</span>— NO SIGNAL —
+</div>
+
+<script src="/ext/noap/noap-format.js"></script>
+<script type="module" src="/ext/noap/noap.js"></script>
+</body>
+</html>
