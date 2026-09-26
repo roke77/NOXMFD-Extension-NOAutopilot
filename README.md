@@ -13,10 +13,11 @@ Planned in two phases:
 
 - **Phase 1 — AP page**: a visible UI for NOAutopilot's existing features. Status annunciators,
   current and target altitude, speed, course, and bank, apply and engage/disengage, NOAutopilot's
-  own nav mode, and the GCAS, autothrottle, auto-jammer, and autoland toggles. Click/touch only;
+  own nav mode, and the GCAS, autothrottle, auto-jammer, autoland, afterburner/airbrake, and
+  single-player FBW toggles, matching everything in NOAutopilot's F8 window. Click/touch only;
   NOAutopilot's own keybinds stay as they are.
-- **Phase 2 — NOXMFD integration**: starting with flying NOXMFD's WPT route, with direct-to and
-  loop.
+- **Phase 2 — NOXMFD integration**: flying NOXMFD's WPT route (with direct-to and loop), and
+  drawing NOAutopilot's own nav queue on NOXMFD's MAP.
 
 Built entirely through NOXMFD's public extension API (see NOXMFD's
 [`EXTENSIONS.md`](https://github.com/roke77/NOXMFD/blob/main/EXTENSIONS.md)). This repo does
