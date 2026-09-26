@@ -65,3 +65,10 @@ The build copies `NOXMFD.NOAutopilotModule.dll` into `$(GameDir)\BepInEx\plugins
 - [NOAutopilot](https://github.com/qwerty1423/no-autopilot-mod) for the page to do anything
 
 Some multiplayer hosts prohibit NOAutopilot. Check with the host before using it, especially in PvP.
+
+## Installing
+
+1. Install BepInEx 5, [NOXMFD](https://github.com/roke77/NOXMFD), and
+   [NOAutopilot](https://github.com/qwerty1423/no-autopilot-mod).
+2. Drop `NOXMFD.NOAutopilotModule.dll` into `BepInEx/plugins/`.
+3. Launch the game. An **AP** entry appears under NOXMFD's EXT nav.

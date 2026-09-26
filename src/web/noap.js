@@ -173,13 +173,12 @@ function render(s, metric) {
 
   const t = s.tgt || {}, c = s.cur || {}, q = s.navq || {};
   const athr = F.tgtOn.spd(t.spd);
-  const kSpd = metric ? 3.6 : 1.94384;   // m/s → km/h or kt, as noap-format.js's spd()
 
   // Speed: the tape runs in kt or km/h; in Mach mode the box shows Mach and a Mach target is placed
   // on the tape through the current speed-of-sound ratio (spd / mach).
-  const spdCur = c.spd != null ? c.spd * kSpd : null;
+  const spdCur = c.spd != null ? F.spdVal(c.spd, metric) : null;
   let spdTgt = null;
-  if (athr && spdCur != null) spdTgt = s.mach ? (c.mach > 0.05 ? t.spd * spdCur / c.mach : null) : t.spd * kSpd;
+  if (athr && spdCur != null) spdTgt = s.mach ? (c.mach > 0.05 ? t.spd * spdCur / c.mach : null) : F.spdVal(t.spd, metric);
   speedTape(spdCur, spdTgt, s.mach ? F.mach(c.mach) : F.spd(c.spd, metric), metric);
   setTgt('spd-tgt', athr ? F.tgtSpd(t.spd, s.mach, metric) : 'OFF', athr);
   $('unit-a').textContent = F.spdUnit(metric);
@@ -187,9 +186,8 @@ function render(s, metric) {
   $('unit-m').classList.toggle('on', !!s.mach);
 
   // Altitude
-  const kAlt = metric ? 1 : 3.28084;
   const altOn = F.tgtOn.alt(t.alt);
-  altTape(c.alt != null ? c.alt * kAlt : null, altOn && c.alt != null ? t.alt * kAlt : null, metric);
+  altTape(c.alt != null ? F.altVal(c.alt, metric) : null, altOn && c.alt != null ? F.altVal(t.alt, metric) : null, metric);
   setTgt('alt-tgt', altOn ? F.alt(t.alt, metric) : 'OFF', altOn);
   $('vs-val').textContent = t.vs > 0 ? F.vs(t.vs, metric) : F.DASH;
 

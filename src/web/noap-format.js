@@ -10,9 +10,13 @@
   const fin = (v) => typeof v === 'number' && isFinite(v);
   const grp = (v) => Math.round(v).toLocaleString('en-US');
 
-  const alt = (m, metric) => fin(m) ? grp(metric ? m : m * FT_PER_M) : DASH;
+  // Numeric conversions, shared by the text readouts below and the page's tapes.
+  const altVal = (m, metric) => metric ? m : m * FT_PER_M;
+  const spdVal = (ms, metric) => ms * (metric ? KMH_PER_MS : KT_PER_MS);
+
+  const alt = (m, metric) => fin(m) ? grp(altVal(m, metric)) : DASH;
   const altUnit = (metric) => metric ? 'M' : 'FT';
-  const spd = (ms, metric) => fin(ms) ? grp(ms * (metric ? KMH_PER_MS : KT_PER_MS)) : DASH;
+  const spd = (ms, metric) => fin(ms) ? grp(spdVal(ms, metric)) : DASH;
   const spdUnit = (metric) => metric ? 'KM/H' : 'KT';
   const vs = (ms, metric) => fin(ms) ? grp(metric ? ms : ms * FPM_PER_MS) : DASH;
   const vsUnit = (metric) => metric ? 'M/S' : 'FPM';
@@ -74,7 +78,7 @@
     return out;
   }
 
-  const api = { alt, altUnit, spd, spdUnit, vs, vsUnit, mach, deg3, roll, dist, eta, tgtOn, tgtSpd, gcasState,
+  const api = { altVal, spdVal, alt, altUnit, spd, spdUnit, vs, vsUnit, mach, deg3, roll, dist, eta, tgtOn, tgtSpd, gcasState,
     tapeMarks, tapeBug, angDiff, hdgMarks, DASH };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.NoApFormat = api;
