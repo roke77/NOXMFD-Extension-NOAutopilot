@@ -10,9 +10,40 @@
   const fin = (v) => typeof v === 'number' && isFinite(v);
   const grp = (v) => Math.round(v).toLocaleString('en-US');
 
-  // Numeric conversions, shared by the text readouts below and the page's tapes.
+  // Numeric conversions, shared by the text readouts below, the page's tapes, and its target
+  // steps/keypad (which work in display units and send SI back).
   const altVal = (m, metric) => metric ? m : m * FT_PER_M;
   const spdVal = (ms, metric) => ms * (metric ? KMH_PER_MS : KT_PER_MS);
+  const vsVal = (ms, metric) => metric ? ms : ms * FPM_PER_MS;
+  const altFromDisp = (v, metric) => metric ? v : v / FT_PER_M;
+  const spdFromDisp = (v, metric) => v / (metric ? KMH_PER_MS : KT_PER_MS);
+  const vsFromDisp = (v, metric) => metric ? v : v / FPM_PER_MS;
+
+  // Target step sizes in display units (plan, controls step).
+  const STEP = {
+    alt: (metric) => metric ? 100 : 500,
+    spd: (isMach) => isMach ? 0.01 : 10,
+    crs: 5,
+    roll: 5,
+    vs: (metric) => metric ? 2.5 : 500,
+  };
+
+  // One step from `base` in direction dir (+1/-1), snapping to the step grid first: 18,240 steps up
+  // to 18,500 and down to 18,000 rather than to 18,740/17,740. Within 1% of a grid line counts as on
+  // it: targets round-trip through SI (420 kt is stored as 216.07 m/s, back as 420.0005 kt), and a
+  // value a hair off the grid would otherwise snap to itself and the tap would do nothing.
+  function stepTo(base, dir, step) {
+    const n = base / step;
+    const snapped = dir > 0 ? Math.floor(n + 0.01) + 1 : Math.ceil(n - 0.01) - 1;
+    return Math.round(snapped * step * 1000) / 1000;
+  }
+
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+  // Keypad entry: digits with at most one decimal point. Anything else, or nothing, is null.
+  function parseEntry(text) {
+    return /^(\d+\.?\d*|\.\d+)$/.test(text) ? parseFloat(text) : null;
+  }
 
   const alt = (m, metric) => fin(m) ? grp(altVal(m, metric)) : DASH;
   const altUnit = (metric) => metric ? 'M' : 'FT';
@@ -78,7 +109,8 @@
     return out;
   }
 
-  const api = { altVal, spdVal, alt, altUnit, spd, spdUnit, vs, vsUnit, mach, deg3, roll, dist, eta, tgtOn, tgtSpd, gcasState,
+  const api = { altVal, spdVal, vsVal, altFromDisp, spdFromDisp, vsFromDisp, STEP, stepTo, clamp, parseEntry,
+    alt, altUnit, spd, spdUnit, vs, vsUnit, mach, deg3, roll, dist, eta, tgtOn, tgtSpd, gcasState,
     tapeMarks, tapeBug, angDiff, hdgMarks, DASH };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.NoApFormat = api;

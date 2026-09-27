@@ -5,7 +5,8 @@ using UnityEngine;
 namespace NoApModule
 {
     // A separate BepInEx plugin, not part of NOXMFD.dll: it registers the AP page with NOXMFD's
-    // public Api and reads NOAutopilot through NoApBridge (docs/noautopilot-plan.md).
+    // public Api, reads NOAutopilot through NoApBridge, and applies the page's commands through
+    // NoApCommands (docs/noautopilot-plan.md).
     [BepInPlugin("com.roque.noautopilot-module", "NOXMFD: NOAutopilot Extension", MyPluginInfo.PLUGIN_VERSION)]
     // 0.58.0 carries extension API version 7 (the WPT route reads). Phase 1 doesn't use them, but
     // pinning it now keeps Phase 2 from raising the requirement (plan, "Architecture").
@@ -26,7 +27,7 @@ namespace NoApModule
         private void Awake()
         {
             Log = Logger;
-            _registered = NOXMFD.Api.RegisterExtension(ExtId, "AP", NoApPageAssets.Resolve);
+            _registered = NOXMFD.Api.RegisterExtension(ExtId, "AP", NoApPageAssets.Resolve, NoApCommands.Handle);
             if (!_registered)
             {
                 Log.LogError("[NOAP] failed to register with NOXMFD (id already taken?); extension disabled.");

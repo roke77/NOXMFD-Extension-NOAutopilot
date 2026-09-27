@@ -2,8 +2,8 @@
 
 ## Status
 
-Phase 1 build step 1 (read-only) is built and awaiting its live-game check; step 2 (controls) is
-next. The project runs in two phases:
+Phase 1 is built. Step 1 (read-only) passed its live-game check; step 2 (controls) is built and
+awaiting its live-game check. The project runs in two phases:
 
 - **Phase 1 — AP page.** A full MFD page that gives a visible UI to NOAutopilot's existing
   features: status, targets, engage/disengage, its own nav mode, GCAS, autothrottle, auto-jammer,
@@ -147,7 +147,9 @@ Suggested build order within Phase 1:
    the live game with no way to affect the aircraft.
 2. **Controls.** Target steps with pending/APPLY, the AP ring, SYNC, KT/M, the nav strip's
    buttons and CYCLE WP, the GCAS/A/THR/AB/BRK/JAM/FBW OFF toggles, and ALS through the
-   private `StartAutoland`.
+   private `StartAutoland`. Steps are 500 ft / 100 m for altitude, 10 kt / 10 km/h / 0.01 Mach
+   for speed, 5° for course and bank, and 500 fpm / 2.5 m/s for the V/S limit, each snapping to
+   its grid first. Tapping the speed or altitude target opens a keypad in the displayed unit.
 
 ## Phase 2 — NOXMFD integration
 

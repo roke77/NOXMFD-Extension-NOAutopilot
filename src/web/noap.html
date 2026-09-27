@@ -22,7 +22,7 @@
   <div class="mid">
     <!-- Speed tape -->
     <div class="col col-spd">
-      <div class="tgt-read" id="spd-tgt">—</div>
+      <button class="tgt-read" id="spd-tgt" aria-label="Speed target, tap to type">—</button>
       <button class="key key-wide" id="spd-up" aria-label="Speed target up"><svg viewBox="0 0 24 24" class="ico ico-lg"><path d="M6 15l6-6 6 6"/></svg></button>
       <svg class="tape" viewBox="0 0 140 330" role="img" aria-label="Speed tape"><g id="spd-g"></g></svg>
       <button class="key key-wide" id="spd-dn" aria-label="Speed target down"><svg viewBox="0 0 24 24" class="ico ico-lg"><path d="M6 9l6 6 6-6"/></svg></button>
@@ -67,7 +67,7 @@
 
     <!-- Altitude tape -->
     <div class="col col-alt">
-      <div class="tgt-read" id="alt-tgt">—</div>
+      <button class="tgt-read" id="alt-tgt" aria-label="Altitude target, tap to type">—</button>
       <button class="key key-wide" id="alt-up" aria-label="Altitude target up"><svg viewBox="0 0 24 24" class="ico ico-lg"><path d="M6 15l6-6 6 6"/></svg></button>
       <svg class="tape" viewBox="0 0 150 330" role="img" aria-label="Altitude tape"><g id="alt-g"></g></svg>
       <button class="key key-wide" id="alt-dn" aria-label="Altitude target down"><svg viewBox="0 0 24 24" class="ico ico-lg"><path d="M6 9l6 6 6-6"/></svg></button>
@@ -99,7 +99,7 @@
     <button class="lit lit-col" id="t-xthr" aria-label="Afterburner and airbrake for autothrottle"><span class="bar"></span><span class="lit-lbl"><svg viewBox="0 0 24 24" class="ico"><path d="M12 22c-4 0-7-3-7-7 0-4 4-6 4-11 3 2 6 5 6 9 1-1 2-2 2-4 2 2 2 4 2 6 0 4-3 7-7 7z"/></svg>AB/BRK</span></button>
     <button class="lit lit-col" id="t-jam" aria-label="Auto jammer"><span class="bar"></span><span class="lit-lbl"><svg viewBox="0 0 24 24" class="ico"><path d="M13 2L5 13h6l-1 9 8-12h-6z"/></svg>JAM</span></button>
     <button class="lit lit-col" id="t-fbw" aria-label="FBW off"><span class="bar"></span><span class="lit-lbl"><svg viewBox="0 0 24 24" class="ico fbw-lock"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><svg viewBox="0 0 24 24" class="ico fbw-wing"><path d="M2 14l10-4 10 4"/><path d="M12 10V4"/><path d="M8 20l4-3 4 3"/></svg>FBW</span></button>
-    <div class="guard"><button class="lit lit-col" id="t-als" aria-label="Autoland, guarded, tap twice"><span class="bar"></span><span class="lit-lbl"><svg viewBox="0 0 24 24" class="ico"><path d="M7 21l3-12h4l3 12"/><path d="M12 11v2M12 15v2M12 19v1"/><path d="M3 3l5 4M8 4v3H5"/></svg>ALS</span></button></div>
+    <div class="guard"><button class="lit lit-col" id="t-als" aria-label="Autoland, guarded, tap twice"><span class="bar"></span><span class="lit-lbl"><svg viewBox="0 0 24 24" class="ico"><path d="M7 21l3-12h4l3 12"/><path d="M12 11v2M12 15v2M12 19v1"/><path d="M3 3l5 4M8 4v3H5"/></svg><span id="t-als-txt">ALS</span></span></button></div>
   </div>
 
   <div class="footer">
@@ -109,6 +109,26 @@
   </div>
 
   <div class="notice" id="notice" hidden></div>
+
+  <!-- Target keypad, opened by tapping the speed or altitude target readout -->
+  <div class="keypad-scrim" id="keypad" hidden>
+    <div class="keypad" role="dialog" aria-labelledby="kp-title">
+      <div class="kp-title" id="kp-title">ALT FT</div>
+      <div class="kp-display" id="kp-display"></div>
+      <div class="kp-error" id="kp-error"></div>
+      <div class="kp-grid" id="kp-grid">
+        <button class="key" data-k="7">7</button><button class="key" data-k="8">8</button><button class="key" data-k="9">9</button>
+        <button class="key" data-k="4">4</button><button class="key" data-k="5">5</button><button class="key" data-k="6">6</button>
+        <button class="key" data-k="1">1</button><button class="key" data-k="2">2</button><button class="key" data-k="3">3</button>
+        <button class="key" data-k=".">.</button><button class="key" data-k="0">0</button>
+        <button class="key" data-k="back" aria-label="Delete"><svg viewBox="0 0 24 24" class="ico"><path d="M9 6h11v12H9l-5-6z"/><path d="M12 10l4 4M16 10l-4 4"/></svg></button>
+      </div>
+      <div class="kp-actions">
+        <button class="key" id="kp-cancel">CANCEL</button>
+        <button class="key act-apply" id="kp-enter">ENTER</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="mfd-empty" id="no-mission">

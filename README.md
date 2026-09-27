@@ -26,17 +26,20 @@ the page loads and says why it's inactive.
 
 ## Status
 
-Phase 1 in progress: the read-only AP page is built (status, targets, nav mode, and toggle states,
-with no controls yet). See [`docs/noautopilot-plan.md`](docs/noautopilot-plan.md) for the design,
-the integration surface, and the phasing.
+Phase 1 is built: the AP page shows NOAutopilot's state and every control works, pending its
+live-game check. See [`docs/noautopilot-plan.md`](docs/noautopilot-plan.md) for the design, the
+integration surface, and the phasing.
 
 ## What's here
 
 - `src/plugin/Plugin.cs` registers the **AP** EXT page and publishes NOAutopilot's state at 10 Hz.
-- `src/plugin/NoApBridge.cs` reads NOAutopilot by reflection and builds the published slice.
+- `src/plugin/NoApBridge.cs` reads and writes NOAutopilot by reflection and builds the published
+  slice.
+- `src/plugin/NoApCommands.cs` validates the page's commands and applies them the way NOAutopilot's
+  F8 window and keybinds do.
 - `src/plugin/NoApPageAssets.cs` serves the embedded `src/web/` files.
-- `src/web/noap.{html,css,js}` is the page; `noap-format.js` holds its unit and sentinel helpers,
-  checked by `node src/web/noap-format.test.js`.
+- `src/web/noap.{html,css,js}` is the page; `noap-format.js` holds its unit, sentinel, tape, and
+  target-step helpers, checked by `node src/web/noap-format.test.js`.
 - `lib/NOXMFD.dll` is a compile-time reference only (`Private=false`), not shipped.
 
 ## Building

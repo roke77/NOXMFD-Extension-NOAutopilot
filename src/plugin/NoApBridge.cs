@@ -10,10 +10,11 @@ using UnityEngine;
 
 namespace NoApModule
 {
-    // Read side of the NOAutopilot link (docs/noautopilot-plan.md, "Integration surface").
-    // NOAutopilot has no API, so every member is looked up once by reflection; a lookup that fails
-    // leaves the page INCOMPATIBLE with the missing names logged, never an exception. Main thread
-    // only: APData is written by NOAutopilot's own Unity callbacks.
+    // The NOAutopilot link (docs/noautopilot-plan.md, "Integration surface"). NOAutopilot has no
+    // API, so every member is looked up once by reflection; a lookup that fails leaves the page
+    // INCOMPATIBLE with the missing names logged, never an exception. This class only exposes what
+    // NOAutopilot has (typed get/set and its own methods); what the page's buttons do with it is
+    // NoApCommands. Main thread only: APData is written by NOAutopilot's own Unity callbacks.
     internal static class NoApBridge
     {
         internal const string NoApGuid = "com.qwerty1423.NOAutopilot";
@@ -23,10 +24,22 @@ namespace NoApModule
         private static Link _link;
         private static string _version = "";
 
-        private static FieldInfo? _enabled, _navEnabled, _gcasEnabled, _gcasWarning, _gcasActive, _autoJam,
-            _alsActive, _alsText, _extremeThrottle, _fbwDisabled, _speedIsMach, _tgtAlt, _tgtSpeed,
-            _tgtCourse, _tgtRoll, _climbRate, _navQueue, _aircraft, _rb, _navCycle, _isBroken;
-        private static MethodInfo? _isMultiplayer;
+        private static FieldInfo _enabled = null!, _navEnabled = null!, _gcasEnabled = null!, _gcasWarning = null!,
+            _gcasActive = null!, _autoJam = null!, _alsActive = null!, _alsText = null!, _extremeThrottle = null!,
+            _fbwDisabled = null!, _speedIsMach = null!, _useSetValues = null!, _tgtAlt = null!, _tgtSpeed = null!,
+            _tgtCourse = null!, _tgtRoll = null!, _climbRate = null!, _navQueue = null!, _aircraft = null!, _rb = null!,
+            _pilot = null!, _navCycle = null!, _defaultCRLimit = null!, _disableATAPGUI = null!, _isBroken = null!;
+        private static MethodInfo _isMultiplayer = null!, _syncMenuValues = null!, _refreshNavVisuals = null!,
+            _updateFBWState = null!, _startAutoland = null!;
+
+        internal static bool IsLinked
+        {
+            get
+            {
+                if (_link == Link.Unresolved) Resolve();
+                return _link == Link.Linked;
+            }
+        }
 
         private static void Resolve()
         {
@@ -45,11 +58,20 @@ namespace NoApModule
             if (ap == null) missing.Add("NOAutopilot.Core.APData");
             if (pl == null) missing.Add("NOAutopilot.Core.Plugin");
 
-            FieldInfo? F(Type? t, string name)
+            FieldInfo F(Type? t, string name)
             {
                 FieldInfo? f = t?.GetField(name, BindingFlags.Public | BindingFlags.Static);
                 if (f == null && t != null) missing.Add(t.Name + "." + name);
-                return f;
+                return f!;
+            }
+
+            // StartAutoland is private; the rest are public.
+            MethodInfo M(string name, bool nonPublic = false)
+            {
+                BindingFlags vis = nonPublic ? BindingFlags.NonPublic : BindingFlags.Public;
+                MethodInfo? m = pl?.GetMethod(name, vis | BindingFlags.Static, null, Type.EmptyTypes, null);
+                if (m == null && pl != null) missing.Add("Plugin." + name + "()");
+                return m!;
             }
 
             _enabled = F(ap, "Enabled");
@@ -63,6 +85,7 @@ namespace NoApModule
             _extremeThrottle = F(ap, "AllowExtremeThrottle");
             _fbwDisabled = F(ap, "FBWDisabled");
             _speedIsMach = F(ap, "SpeedHoldIsMach");
+            _useSetValues = F(ap, "UseSetValues");
             _tgtAlt = F(ap, "TargetAlt");
             _tgtSpeed = F(ap, "TargetSpeed");
             _tgtCourse = F(ap, "TargetCourse");
@@ -71,10 +94,16 @@ namespace NoApModule
             _navQueue = F(ap, "NavQueue");
             _aircraft = F(ap, "LocalAircraft");
             _rb = F(ap, "PlayerRB");
+            _pilot = F(ap, "LocalPilot");
             _navCycle = F(pl, "NavCycle");
+            _defaultCRLimit = F(pl, "DefaultCRLimit");
+            _disableATAPGUI = F(pl, "DisableATAPGUI");
             _isBroken = F(pl, "IsBroken");
-            _isMultiplayer = pl?.GetMethod("IsMultiplayer", BindingFlags.Public | BindingFlags.Static, null, Type.EmptyTypes, null);
-            if (_isMultiplayer == null && pl != null) missing.Add("Plugin.IsMultiplayer()");
+            _isMultiplayer = M("IsMultiplayer");
+            _syncMenuValues = M("SyncMenuValues");
+            _refreshNavVisuals = M("RefreshNavVisuals");
+            _updateFBWState = M("UpdateFBWState");
+            _startAutoland = M("StartAutoland", nonPublic: true);
 
             if (missing.Count == 0)
             {
@@ -88,19 +117,78 @@ namespace NoApModule
             }
         }
 
+        // A member that resolved but no longer has the expected type (an NOAutopilot update) throws on
+        // every use; the first failure logs and stops the link for the rest of the session.
+        internal static void Fail(string what, Exception ex)
+        {
+            _link = Link.Incompatible;
+            Plugin.Log?.LogWarning($"[NOAP] {what} failed against NOAutopilot {_version}, AP page disabled: {ex}");
+        }
+
+        // ── NOAutopilot state (APData and Plugin settings) ────────────────────────────────────
+        private static bool GetB(FieldInfo f) => (bool)f.GetValue(null)!;
+        private static float GetF(FieldInfo f) => (float)f.GetValue(null)!;
+
+        internal static bool Enabled { get => GetB(_enabled); set => _enabled.SetValue(null, value); }
+        internal static bool NavEnabled { get => GetB(_navEnabled); set => _navEnabled.SetValue(null, value); }
+        internal static bool GcasEnabled { get => GetB(_gcasEnabled); set => _gcasEnabled.SetValue(null, value); }
+        internal static bool GcasWarning { get => GetB(_gcasWarning); set => _gcasWarning.SetValue(null, value); }
+        internal static bool GcasActive { get => GetB(_gcasActive); set => _gcasActive.SetValue(null, value); }
+        internal static bool AutoJammer { get => GetB(_autoJam); set => _autoJam.SetValue(null, value); }
+        internal static bool AlsActive { get => GetB(_alsActive); set => _alsActive.SetValue(null, value); }
+        internal static string AlsText { get => _alsText.GetValue(null) as string ?? ""; set => _alsText.SetValue(null, value); }
+        internal static bool ExtremeThrottle { get => GetB(_extremeThrottle); set => _extremeThrottle.SetValue(null, value); }
+        internal static bool FbwDisabled { get => GetB(_fbwDisabled); set => _fbwDisabled.SetValue(null, value); }
+        internal static bool SpeedIsMach { get => GetB(_speedIsMach); set => _speedIsMach.SetValue(null, value); }
+        internal static bool UseSetValues { set => _useSetValues.SetValue(null, value); }
+        // Targets use NOAutopilot's units and sentinels: alt m (-1 off), speed m/s or Mach (-1 off),
+        // course deg (-1 off), roll deg (-999 off), climb-rate limit m/s.
+        internal static float TargetAlt { get => GetF(_tgtAlt); set => _tgtAlt.SetValue(null, value); }
+        internal static float TargetSpeed { get => GetF(_tgtSpeed); set => _tgtSpeed.SetValue(null, value); }
+        internal static float TargetCourse { get => GetF(_tgtCourse); set => _tgtCourse.SetValue(null, value); }
+        internal static float TargetRoll { get => GetF(_tgtRoll); set => _tgtRoll.SetValue(null, value); }
+        internal static float ClimbRate { get => GetF(_climbRate); set => _climbRate.SetValue(null, value); }
+        internal static List<Vector3> NavQueue => (List<Vector3>)_navQueue.GetValue(null)!;
+        internal static Aircraft? Aircraft => _aircraft.GetValue(null) as Aircraft;
+        internal static Rigidbody? Rb => _rb.GetValue(null) as Rigidbody;
+        internal static Pilot? LocalPilot => _pilot.GetValue(null) as Pilot;
+        internal static ConfigEntry<bool> NavCycle => (ConfigEntry<bool>)_navCycle.GetValue(null)!;
+        internal static float DefaultCRLimit => ((ConfigEntry<float>)_defaultCRLimit.GetValue(null)!).Value;
+        internal static bool DisableATAPGUI => ((ConfigEntry<bool>)_disableATAPGUI.GetValue(null)!).Value;
+        internal static bool IsBroken => GetB(_isBroken);
+
+        // ── NOAutopilot's own methods ─────────────────────────────────────────────────────────
+        internal static bool IsMultiplayer() => (bool)_isMultiplayer.Invoke(null, null)!;
+        internal static void SyncMenuValues() => _syncMenuValues.Invoke(null, null);
+        internal static void RefreshNavVisuals() => _refreshNavVisuals.Invoke(null, null);
+        internal static void UpdateFBWState() => _updateFBWState.Invoke(null, null);
+        internal static void StartAutoland() => _startAutoland.Invoke(null, null);
+
+        // ── derived flight state, same derivations as NOAutopilot's F8 readout ────────────────
+        internal static bool InAircraft(out Aircraft ac, out Rigidbody rb)
+        {
+            ac = Aircraft!;
+            rb = Rb!;
+            return ac != null && rb != null;
+        }
+
+        internal static float CurrentAlt(Aircraft ac) => ac.GlobalPosition().y;
+        internal static float SpeedOfSound(Aircraft ac) => Mathf.Max(LevelInfo.GetSpeedOfSound(CurrentAlt(ac)), 1f);
+
+        // Ground track, or NaN when too slow to have one.
+        internal static float CurrentCourse(Rigidbody rb)
+        {
+            var flat = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
+            return flat.sqrMagnitude > 1f ? Quaternion.LookRotation(flat).eulerAngles.y : float.NaN;
+        }
+
+        // ── published slice ───────────────────────────────────────────────────────────────────
         internal static string BuildSliceJson()
         {
-            if (_link == Link.Unresolved) Resolve();
-            if (_link == Link.Linked)
+            if (IsLinked)
             {
                 try { return BuildLinkedJson(); }
-                catch (Exception ex)
-                {
-                    // A member that resolved but no longer has the expected type (an NOAutopilot
-                    // update) throws on every frame; log once and stop reading it.
-                    _link = Link.Incompatible;
-                    Plugin.Log?.LogWarning($"[NOAP] reading NOAutopilot {_version} failed, AP page disabled: {ex}");
-                }
+                catch (Exception ex) { Fail("reading state", ex); }
             }
             return new JsonObj()
                 .Str("link", _link == Link.Missing ? "missing" : "incompatible")
@@ -108,60 +196,50 @@ namespace NoApModule
                 .ToString();
         }
 
-        private static bool B(FieldInfo f) => (bool)f.GetValue(null)!;
-        private static float N(FieldInfo f) => (float)f.GetValue(null)!;
-
         private static string BuildLinkedJson()
         {
             var j = new JsonObj()
                 .Str("link", "linked")
                 .Str("ver", _version)
-                .Bool("broken", B(_isBroken!))
-                .Bool("mp", (bool)_isMultiplayer!.Invoke(null, null)!)
-                .Bool("ap", B(_enabled!))
-                .Bool("nav", B(_navEnabled!))
-                .Bool("gcas", B(_gcasEnabled!))
-                .Bool("gcasWarn", B(_gcasWarning!))
-                .Bool("gcasActive", B(_gcasActive!))
-                .Bool("jam", B(_autoJam!))
-                .Bool("als", B(_alsActive!))
-                .Str("alsText", _alsText!.GetValue(null) as string ?? "")
-                .Bool("xthr", B(_extremeThrottle!))
-                .Bool("fbw", B(_fbwDisabled!))
-                .Bool("cycle", ((ConfigEntry<bool>)_navCycle!.GetValue(null)!).Value)
-                .Bool("mach", B(_speedIsMach!));
+                .Bool("broken", IsBroken)
+                .Bool("mp", IsMultiplayer())
+                .Bool("ap", Enabled)
+                .Bool("nav", NavEnabled)
+                .Bool("gcas", GcasEnabled)
+                .Bool("gcasWarn", GcasWarning)
+                .Bool("gcasActive", GcasActive)
+                .Bool("jam", AutoJammer)
+                .Bool("als", AlsActive)
+                .Str("alsText", AlsText)
+                .Bool("xthr", ExtremeThrottle)
+                .Bool("fbw", FbwDisabled)
+                .Bool("cycle", NavCycle.Value)
+                .Bool("mach", SpeedIsMach);
 
-            // Raw NOAutopilot values, sentinels included (alt/spd/crs -1 = off, roll -999 = off);
-            // spd is Mach when "mach" is true, else m/s. The page owns units and formatting.
+            // Raw NOAutopilot values, sentinels included; the page owns units and formatting.
             j.Obj("tgt", new JsonObj()
-                .Num("alt", N(_tgtAlt!))
-                .Num("spd", N(_tgtSpeed!))
-                .Num("crs", N(_tgtCourse!))
-                .Num("roll", N(_tgtRoll!))
-                .Num("vs", N(_climbRate!)));
+                .Num("alt", TargetAlt)
+                .Num("spd", TargetSpeed)
+                .Num("crs", TargetCourse)
+                .Num("roll", TargetRoll)
+                .Num("vs", ClimbRate));
 
-            var queue = (List<Vector3>)_navQueue!.GetValue(null)!;
-            var ac = _aircraft!.GetValue(null) as Aircraft;
-            var rb = _rb!.GetValue(null) as Rigidbody;
-            bool air = ac != null && rb != null;
+            List<Vector3> queue = NavQueue;
+            bool air = InAircraft(out Aircraft ac, out Rigidbody rb);
             j.Bool("air", air);
 
             var nav = new JsonObj().Num("n", queue.Count);
             if (air)
             {
-                float alt = ac!.GlobalPosition().y;
-                Vector3 v = rb!.velocity;
-                var flat = new Vector3(v.x, 0f, v.z);
-                float roll = ac!.transform.eulerAngles.z;
+                float roll = ac.transform.eulerAngles.z;
                 if (roll > 180f) roll -= 360f;
-                // Same derivations as NOAutopilot's own F8 readout, so the two always agree.
                 j.Obj("cur", new JsonObj()
-                    .Num("alt", alt)
-                    .Num("spd", v.magnitude)
-                    .Num("mach", v.magnitude / Mathf.Max(LevelInfo.GetSpeedOfSound(alt), 1f))
-                    .Num("crs", flat.sqrMagnitude > 1f ? Quaternion.LookRotation(flat).eulerAngles.y : float.NaN)
+                    .Num("alt", CurrentAlt(ac))
+                    .Num("spd", rb.velocity.magnitude)
+                    .Num("mach", rb.velocity.magnitude / SpeedOfSound(ac))
+                    .Num("crs", CurrentCourse(rb))
                     .Num("roll", roll)
-                    .Num("vs", v.y));
+                    .Num("vs", rb.velocity.y));
 
                 if (queue.Count > 0)
                 {

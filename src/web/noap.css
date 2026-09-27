@@ -17,7 +17,10 @@ button {
   font: inherit; color: inherit; background: none; border: 0; margin: 0; padding: 0;
   display: flex; align-items: center; justify-content: center;
 }
+button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 button:disabled { cursor: not-allowed; }
+/* Press feedback for every key and pushbutton, so a tap on a touchscreen visibly lands. */
+button:not(:disabled):active { background-color: rgba(var(--no-green-rgb), 0.18); }
 
 /* ponytail: the page is laid out on the mockup's fixed 900x900 canvas and scaled to fit the pane
    (noap.js fitStage), so it matches the design exactly on the square MFD panes it's built for. A
@@ -55,7 +58,7 @@ button:disabled { cursor: not-allowed; }
 .col-spd { width: 140px; }
 .col-alt { width: 150px; }
 .tape { width: 100%; height: 330px; }
-.tgt-read { height: 30px; display: flex; align-items: center; gap: 6px; font-size: 22px; }
+.tgt-read { height: 30px; display: flex; align-items: center; gap: 6px; font-size: 22px; color: var(--no-green); padding: 0 8px; border-radius: 4px; }
 .tgt-read.off { color: var(--no-green-dim); }
 .tgt-read.pend { color: var(--no-amber); }
 .tgt-read.pend::after { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--no-amber); }
@@ -68,6 +71,7 @@ button:disabled { cursor: not-allowed; }
 .bug { fill: var(--no-green); }
 .bug.pend { fill: var(--no-amber); }
 .bug.hollow { fill: none; stroke: var(--no-green); stroke-width: 1.5; }
+.bug.hollow.pend { fill: none; stroke: var(--no-amber); }
 .chev { fill: none; stroke: var(--no-green); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
 .chev.pend { stroke: var(--no-amber); }
 
@@ -88,6 +92,9 @@ button:disabled { cursor: not-allowed; }
 .bank-lim { stroke: var(--no-green); stroke-width: 6; }
 .bank-ptr { fill: var(--no-white); }
 .bank-txt { fill: var(--no-green); font-size: 20px; font-family: var(--no-font); }
+.bank-txt.pend { fill: var(--no-amber); }
+.bank-lim.pend { stroke: var(--no-amber); }
+.vs-read .pend { color: var(--no-amber); }
 
 .ring-halo { padding: 10px; border: 1px solid var(--no-green-dark); border-radius: 50%; }
 .ap-ring {
@@ -121,6 +128,10 @@ button:disabled { cursor: not-allowed; }
 .lit.alert .bar { background: var(--no-red);   box-shadow: 0 0 10px rgba(var(--no-red-rgb), 0.8); }
 .lit.alert      { border-color: var(--no-red); color: var(--no-red); }
 .lit:disabled   { border-color: #262b26; background: var(--no-bg); color: var(--no-gray); }
+/* ALS guard armed by the first tap: the bar blinks amber until the confirming second tap. */
+.lit.armed      { color: var(--no-amber); }
+.lit.armed .bar { background: var(--no-amber); animation: armed-blink 0.5s steps(2) infinite; }
+@keyframes armed-blink { 50% { opacity: 0.25; } }
 .lit:disabled .bar { background: #121512; box-shadow: none; }
 
 .lit-row { height: 48px; padding: 0 13px; gap: 9px; font-size: 17px; letter-spacing: 2px; }
@@ -181,7 +192,30 @@ button:disabled { cursor: not-allowed; }
   padding: 16px 26px; font-size: 20px; letter-spacing: 2px; text-align: center;
   line-height: 1.6; white-space: pre-line; max-width: 80%;
 }
-body.unlinked .hdg-row, body.unlinked .mid, body.unlinked .nav-strip, body.unlinked .toggles { opacity: 0.2; }
+body.unlinked .hdg-row, body.unlinked .mid, body.unlinked .nav-strip, body.unlinked .toggles { opacity: 0.2; pointer-events: none; }
+
+/* ── keypad ────────────────────────────────────────────────────────────── */
+.keypad-scrim {
+  position: absolute; inset: 0; background: rgba(0, 0, 0, 0.72);
+  display: flex; align-items: center; justify-content: center;
+}
+.keypad-scrim[hidden] { display: none; }
+.keypad {
+  width: 360px; padding: 20px; background: var(--no-bg);
+  border: 1px solid var(--no-green-dark); border-radius: 6px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.kp-title { font-size: 16px; letter-spacing: 3px; color: var(--no-green-dim); }
+.kp-display {
+  height: 64px; padding: 0 14px; border: 1px solid var(--no-amber); border-radius: 4px;
+  display: flex; align-items: center; justify-content: flex-end; font-size: 34px; color: var(--no-amber);
+}
+.kp-display.bad { border-color: var(--no-red); color: var(--no-red); }
+.kp-error { height: 16px; font-size: 13px; letter-spacing: 1px; color: var(--no-red); }
+.kp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.kp-grid .key { height: 60px; font-size: 24px; }
+.kp-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.kp-actions .key { height: 56px; font-size: 18px; letter-spacing: 3px; }
 
 /* No-mission state, shared .mfd-empty (theme.css), same convention as NOXMFD's simple pages. */
 #no-mission { display: none; }

@@ -58,4 +58,30 @@ const h = F.hdgMarks(5, 6, 10, 38 * 6);
 assert.deepStrictEqual(h.map((m) => m.deg), [330, 340, 350, 0, 10, 20, 30, 40]);
 assert.strictEqual(h.find((m) => m.deg === 350).x, -90);
 
+// Steps snap to the grid first, then move one step; values already on the grid move a full step.
+assert.strictEqual(F.stepTo(18240, 1, 500), 18500);
+assert.strictEqual(F.stepTo(18240, -1, 500), 18000);
+assert.strictEqual(F.stepTo(18500, 1, 500), 19000);
+assert.strictEqual(F.stepTo(18500, -1, 500), 18000);
+assert.strictEqual(F.stepTo(0.66, 1, 0.01), 0.67);
+assert.strictEqual(F.stepTo(0.7, -1, 0.01), 0.69);
+assert.strictEqual(F.stepTo(357, 1, 5), 360);
+// Values a hair off the grid after a unit round trip still move a full step.
+assert.strictEqual(F.stepTo(420.0005, -1, 10), 410);
+assert.strictEqual(F.stepTo(21999.99, 1, 500), 22500);
+assert.strictEqual(F.stepTo(21999.99, -1, 500), 21500);
+
+// Display-unit round trips land back on the SI value.
+assert.ok(Math.abs(F.altFromDisp(F.altVal(1000, false), false) - 1000) < 1e-9);
+assert.ok(Math.abs(F.spdFromDisp(F.spdVal(200, true), true) - 200) < 1e-9);
+assert.ok(Math.abs(F.vsFromDisp(F.vsVal(10, false), false) - 10) < 1e-9);
+
+// Keypad entry.
+assert.strictEqual(F.parseEntry('22000'), 22000);
+assert.strictEqual(F.parseEntry('0.85'), 0.85);
+assert.strictEqual(F.parseEntry('.9'), 0.9);
+assert.strictEqual(F.parseEntry(''), null);
+assert.strictEqual(F.parseEntry('.'), null);
+assert.strictEqual(F.parseEntry('1.2.3'), null);
+
 console.log('noap-format: all assertions passed');
