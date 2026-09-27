@@ -126,7 +126,10 @@ Page layout, top to bottom:
    does from F8.
 5. **System toggles.** GCAS, A/THR, AB/BRK (let the autothrottle use afterburner and airbrake),
    JAM (auto-jammer), FBW OFF, and ALS (autoland). FBW OFF shows a lock and is disabled in
-   multiplayer, where NOAutopilot refuses it. ALS sits under a striped guard and needs two taps.
+   multiplayer, where NOAutopilot refuses it. ALS and FBW OFF sit under striped guards: starting
+   autoland or turning FBW off takes two taps, since either can take the aircraft out of the
+   pilot's hands (dropping FBW can leave some aircraft uncontrollable). Cancelling autoland or
+   turning FBW back on is a single tap.
 6. **Footer.** NOAutopilot version and link state (`LINKED`, `NOT INSTALLED`, or `INCOMPATIBLE`),
    the ALS status text, and in a multiplayer session a `MP · HOST RULES` note. With NOAutopilot
    missing or incompatible, the controls are greyed out and the page says why.

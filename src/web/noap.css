@@ -128,7 +128,7 @@ button:not(:disabled):active { background-color: rgba(var(--no-green-rgb), 0.18)
 .lit.alert .bar { background: var(--no-red);   box-shadow: 0 0 10px rgba(var(--no-red-rgb), 0.8); }
 .lit.alert      { border-color: var(--no-red); color: var(--no-red); }
 .lit:disabled   { border-color: #262b26; background: var(--no-bg); color: var(--no-gray); }
-/* ALS guard armed by the first tap: the bar blinks amber until the confirming second tap. */
+/* A guard (ALS, FBW OFF) armed by the first tap: the bar blinks amber until the confirming second tap. */
 .lit.armed      { color: var(--no-amber); }
 .lit.armed .bar { background: var(--no-amber); animation: armed-blink 0.5s steps(2) infinite; }
 @keyframes armed-blink { 50% { opacity: 0.25; } }
@@ -169,6 +169,7 @@ button:not(:disabled):active { background-color: rgba(var(--no-green-rgb), 0.18)
 }
 .guard .lit { height: 62px; border: 0; border-radius: 3px; gap: 8px; }
 .guard .lit .bar { width: 44px; }
+.guard:has(:disabled) { opacity: 0.35; }
 
 /* ── footer ────────────────────────────────────────────────────────────── */
 .footer {

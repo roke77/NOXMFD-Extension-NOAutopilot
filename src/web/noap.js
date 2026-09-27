@@ -244,8 +244,8 @@ function render(s, metric) {
   lit('t-fbw', s.fbw);
   $('t-fbw').disabled = !!s.mp;   // NOAutopilot refuses FBW off in multiplayer
   lit('t-als', s.als);
-  $('t-als').classList.toggle('armed', alsArmed && !s.als);
-  $('t-als-txt').textContent = alsArmed && !s.als ? 'CONFIRM' : 'ALS';
+  showGuard('t-als', s.als, 'ALS');
+  showGuard('t-fbw', s.fbw, 'FBW');
 }
 
 // Re-render right after a local change (a step, APPLY, the keypad) instead of waiting for the next
@@ -341,20 +341,30 @@ function sync() {
   rerender();
 }
 
-// ALS sits under a guard: the first tap arms it for ALS_ARM_MS and the second starts autoland. A
-// running autoland cancels on a single tap, like NOAutopilot's key.
-const ALS_ARM_MS = 3000;
-let alsArmed = false, alsTimer = 0;
-function als() {
-  if (last.als || alsArmed) {
-    post({ cmd: 'als' });
-    alsArmed = false;
-    clearTimeout(alsTimer);
-  } else {
-    alsArmed = true;
-    alsTimer = setTimeout(() => { alsArmed = false; rerender(); }, ALS_ARM_MS);
-  }
-  rerender();
+// ALS and FBW OFF sit under a guard: starting autoland or dropping fly-by-wire takes a first tap
+// that arms the button for ARM_MS and a confirming second tap, since either can take the aircraft
+// out of the pilot's hands. Undoing them (cancelling autoland, turning FBW back on) is a single tap,
+// like NOAutopilot's own keys, so recovery is never slowed down.
+const ARM_MS = 3000;
+const armed = {}, armTimers = {};
+function guarded(id, active, send) {
+  return () => {
+    if (active() || armed[id]) {
+      send();
+      armed[id] = false;
+      clearTimeout(armTimers[id]);
+    } else {
+      armed[id] = true;
+      armTimers[id] = setTimeout(() => { armed[id] = false; rerender(); }, ARM_MS);
+    }
+    rerender();
+  };
+}
+
+function showGuard(id, active, label) {
+  const a = !!armed[id] && !active;
+  $(id).classList.toggle('armed', a);
+  $(id + '-txt').textContent = a ? 'CONFIRM' : label;
 }
 
 const on = (id, fn) => $(id).addEventListener('click', () => { if (last && last.link === 'linked') fn(); });
@@ -386,8 +396,8 @@ on('t-gcas', toggle('gcas'));
 on('t-athr', toggle('athr'));
 on('t-xthr', toggle('abbrk'));
 on('t-jam', toggle('jam'));
-on('t-fbw', toggle('fbw'));
-on('t-als', als);
+on('t-fbw', guarded('t-fbw', () => last.fbw, () => post({ cmd: 'toggle', what: 'fbw' })));
+on('t-als', guarded('t-als', () => last.als, () => post({ cmd: 'als' })));
 
 // ── keypad ──────────────────────────────────────────────────────────────────────────────────
 // Tapping the speed or altitude target types it directly, in the units the page shows; ENTER makes
