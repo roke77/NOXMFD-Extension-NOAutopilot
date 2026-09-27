@@ -111,7 +111,8 @@ Page layout, top to bottom:
 2. **Speed and altitude tapes.** Speed on the left and altitude on the right, like the HUD. Each
    boxes the current value, marks the target with a bug on the tape (a chevron at the tape's end
    when the target is off-scale), and shows the target above the tape. ▲ ▼ step a pending target,
-   shown in amber with a dot; tapping the target readout opens a keypad. KT/M sits under the speed
+   shown in amber with a dot; tapping the target readout, marked with a keypad icon, opens a
+   keypad. KT/M sits under the speed
    tape, and the V/S limit (−/+) under the altitude tape.
 3. **Centre.** A bank scale with the current roll pointer and the bank limit marked on both sides
    (−/+ edit it). Under it, the **AP ring** engages and disengages, copying the F8 button's side
