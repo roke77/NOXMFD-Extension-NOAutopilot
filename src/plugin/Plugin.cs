@@ -27,7 +27,7 @@ namespace NoApModule
         private void Awake()
         {
             Log = Logger;
-            _registered = NOXMFD.Api.RegisterExtension(ExtId, "AP", NoApPageAssets.Resolve, NoApCommands.Handle);
+            _registered = NOXMFD.Api.RegisterExtension(ExtId, "AUTO PILOT", NoApPageAssets.Resolve, NoApCommands.Handle);
             if (!_registered)
             {
                 Log.LogError("[NOAP] failed to register with NOXMFD (id already taken?); extension disabled.");

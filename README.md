@@ -39,7 +39,7 @@ the phasing.
 
 ## What's here
 
-- `src/plugin/Plugin.cs` registers the **AP** EXT page and publishes NOAutopilot's state at 10 Hz.
+- `src/plugin/Plugin.cs` registers the page as **AUTO PILOT** in the EXT nav and publishes NOAutopilot's state at 10 Hz.
 - `src/plugin/NoApBridge.cs` reads and writes NOAutopilot by reflection and builds the published
   slice.
 - `src/plugin/NoApCommands.cs` validates the page's commands and applies them the way NOAutopilot's
@@ -82,7 +82,7 @@ Some multiplayer hosts prohibit NOAutopilot. Check with the host before using it
 1. Install BepInEx 5, [NOXMFD](https://github.com/roke77/NOXMFD), and
    [NOAutopilot](https://github.com/qwerty1423/no-autopilot-mod).
 2. Drop `NOXMFD.NOAutopilotModule.dll` into `BepInEx/plugins/`.
-3. Launch the game. An **AP** entry appears under NOXMFD's EXT nav.
+3. Launch the game. An **AUTO PILOT** entry appears under NOXMFD's EXT nav.
 
 ## Previewing
 
