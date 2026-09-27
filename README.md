@@ -1,7 +1,7 @@
 # NOXMFD Extension: NOAutopilot
 
 [![NOXMFD](https://img.shields.io/badge/Requires-NOXMFD%200.58.0%2B-blue)](https://github.com/roke77/NOXMFD)
-![Status](https://img.shields.io/badge/Status-Planning-lightgrey)
+![Version](https://img.shields.io/badge/Version-0.1.0-green)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Adds an **AP** page under [NOXMFD](https://github.com/roke77/NOXMFD)'s EXT nav that shows and
@@ -26,9 +26,10 @@ the page loads and says why it's inactive.
 
 ## Status
 
-Phase 1 is built: the AP page shows NOAutopilot's state and every control works, pending its
-live-game check. See [`docs/noautopilot-plan.md`](docs/noautopilot-plan.md) for the design, the
-integration surface, and the phasing.
+Phase 1 (the AP page) is released as 0.1.0: it shows NOAutopilot's state and every control
+works. Phase 2 (NOXMFD integration) is next. See
+[`docs/noautopilot-plan.md`](docs/noautopilot-plan.md) for the design, the integration surface, and
+the phasing.
 
 ## What's here
 
@@ -40,6 +41,7 @@ integration surface, and the phasing.
 - `src/plugin/NoApPageAssets.cs` serves the embedded `src/web/` files.
 - `src/web/noap.{html,css,js}` is the page; `noap-format.js` holds its unit, sentinel, tape, and
   target-step helpers, checked by `node src/web/noap-format.test.js`.
+- `tools/preview.py` previews the page in a browser without the game (see Previewing).
 - `lib/NOXMFD.dll` is a compile-time reference only (`Private=false`), not shipped.
 
 ## Building
@@ -75,3 +77,18 @@ Some multiplayer hosts prohibit NOAutopilot. Check with the host before using it
    [NOAutopilot](https://github.com/qwerty1423/no-autopilot-mod).
 2. Drop `NOXMFD.NOAutopilotModule.dll` into `BepInEx/plugins/`.
 3. Launch the game. An **AP** entry appears under NOXMFD's EXT nav.
+
+## Previewing
+
+`tools/preview.py` serves the page with mock telemetry and a rough simulation of NOAutopilot's
+responses, so layout and controls can be checked in a browser without starting the game. It reads
+NOXMFD's shared assets from a sibling `../NOXMFD` checkout, or from a path given as the second
+argument:
+
+```bash
+python tools/preview.py 8790
+```
+
+Then open `http://localhost:8790/`. `GET /scenario?s=<name>&metric=0|1` switches the mock state
+(`flying`, `mach`, `gcas-warn`, `pull-up`, `idle`, `noair`, `missing`, `incompatible`, `broken`,
+`nomission`), and `GET /commands` lists the commands the page sent.
