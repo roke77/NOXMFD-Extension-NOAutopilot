@@ -140,7 +140,7 @@ function lit(id, state) {
 
 function setTgt(id, text, on, pend) {
   const el = $(id);
-  el.textContent = text;
+  el.querySelector('.tgt-val').textContent = text;
   el.classList.toggle('off', !on && !pend);
   el.classList.toggle('pend', !!pend);
 }
