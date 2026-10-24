@@ -80,11 +80,8 @@ Tapping the speed or altitude target opens the keypad:
 
 ## Links
 
-- [Releases and changelog](https://github.com/roke77/NOXMFD-Extension-NOAutopilot/releases)
 - [NOXMFD](https://github.com/roke77/NOXMFD): the browser MFD this page runs in
 - [NOAutopilot](https://github.com/qwerty1423/no-autopilot-mod): the autopilot mod this page controls
-- [Original request, roke77/NOXMFD#86](https://github.com/roke77/NOXMFD/issues/86)
-- [Design and roadmap](docs/noautopilot-plan.md)
 
 ---
 
