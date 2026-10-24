@@ -28,7 +28,6 @@ Built entirely through NOXMFD's public extension API (see
 - [Using the page](#using-the-page)
 - [Installing](#installing)
 - [Links](#links)
-- [What's here](#whats-here)
 - [Building](#building)
 - [Credits](#credits)
 
@@ -86,20 +85,6 @@ Tapping the speed or altitude target opens the keypad:
 - [NOAutopilot](https://github.com/qwerty1423/no-autopilot-mod): the autopilot mod this page controls
 - [Original request, roke77/NOXMFD#86](https://github.com/roke77/NOXMFD/issues/86)
 - [Design and roadmap](docs/noautopilot-plan.md)
-
----
-
-## What's here
-
-- `src/plugin/Plugin.cs` registers the **AUTO PILOT** EXT page and publishes NOAutopilot's state.
-- `src/plugin/NoApBridge.cs` reads and writes NOAutopilot by reflection.
-- `src/plugin/NoApCommands.cs` validates the page's commands and applies them as NOAutopilot's F8
-  window and keybinds do.
-- `src/plugin/NoApPageAssets.cs` serves the embedded `src/web/` files.
-- `src/web/noap.{html,css,js}` is the page; `noap-format.js` holds its pure helpers, checked by
-  `node src/web/noap-format.test.js`.
-- `tools/preview.py` previews the page in a browser with mock telemetry.
-- `lib/NOXMFD.dll` is a compile-time reference only, not shipped to players.
 
 ---
 
