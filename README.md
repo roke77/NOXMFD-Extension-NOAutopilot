@@ -2,7 +2,7 @@
 
 [![NOXMFD](https://img.shields.io/badge/Requires-NOXMFD%200.58.0%2B-blue)](https://github.com/roke77/NOXMFD)
 [![NOAutopilot](https://img.shields.io/badge/Requires-NOAutopilot-lightgrey)](https://github.com/qwerty1423/no-autopilot-mod)
-[![Version](https://img.shields.io/badge/Version-0.1.2-green)](https://github.com/roke77/NOXMFD-Extension-NOAutopilot/releases)
+[![Version](https://img.shields.io/badge/Version-0.1.3-green)](https://github.com/roke77/NOXMFD-Extension-NOAutopilot/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Adds an **AUTO PILOT** page to [NOXMFD](https://github.com/roke77/NOXMFD)'s browser MFD that shows
