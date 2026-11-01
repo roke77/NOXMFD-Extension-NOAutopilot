@@ -58,9 +58,12 @@ namespace NoApModule
             if (ap == null) missing.Add("NOAutopilot.Core.APData");
             if (pl == null) missing.Add("NOAutopilot.Core.Plugin");
 
-            FieldInfo F(Type? t, string name)
+            // `oldName` is the pre-6.0.0 name of a field NOAutopilot 6.0.0 renamed (course → track),
+            // so 5.x keeps linking; drop it once 5.x support is no longer wanted.
+            FieldInfo F(Type? t, string name, string? oldName = null)
             {
-                FieldInfo? f = t?.GetField(name, BindingFlags.Public | BindingFlags.Static);
+                const BindingFlags flags = BindingFlags.Public | BindingFlags.Static;
+                FieldInfo? f = t?.GetField(name, flags) ?? (oldName == null ? null : t?.GetField(oldName, flags));
                 if (f == null && t != null) missing.Add(t.Name + "." + name);
                 return f!;
             }
@@ -88,7 +91,7 @@ namespace NoApModule
             _useSetValues = F(ap, "UseSetValues");
             _tgtAlt = F(ap, "TargetAlt");
             _tgtSpeed = F(ap, "TargetSpeed");
-            _tgtCourse = F(ap, "TargetCourse");
+            _tgtCourse = F(ap, "TargetTrack", "TargetCourse");
             _tgtRoll = F(ap, "TargetRoll");
             _climbRate = F(ap, "CurrentMaxClimbRate");
             _navQueue = F(ap, "NavQueue");
@@ -96,7 +99,7 @@ namespace NoApModule
             _rb = F(ap, "PlayerRB");
             _pilot = F(ap, "LocalPilot");
             _navCycle = F(pl, "NavCycle");
-            _defaultCRLimit = F(pl, "DefaultCRLimit");
+            _defaultCRLimit = F(pl, "DefaultTrkRollLimit", "DefaultCRLimit");
             _disableATAPGUI = F(pl, "DisableATAPGUI");
             _isBroken = F(pl, "IsBroken");
             _isMultiplayer = M("IsMultiplayer");
