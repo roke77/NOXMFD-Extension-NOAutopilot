@@ -3,7 +3,8 @@
 ## Status
 
 Phase 1 is complete and released as 0.1.0; both build steps passed their live-game checks.
-Phase 2 is next. The project runs in two phases:
+Phase 2's route coupling is built and awaits its live-game check; the MAP overlay is deferred.
+The project runs in two phases:
 
 - **Phase 1 — AP page.** A full MFD page that gives a visible UI to NOAutopilot's existing
   features: status, targets, engage/disengage, its own nav mode, GCAS, autothrottle, auto-jammer,
@@ -14,7 +15,9 @@ Phase 2 is next. The project runs in two phases:
 NOXMFD's side of Phase 2 already shipped in
 [NOXMFD 0.58.0](https://github.com/roke77/NOXMFD/releases/tag/0.58.0) (extension API version 7:
 the WPT route reads and `SetActiveRouteNextIndex`, see NOXMFD's `docs/extensions-api.md`
-section 8). Phase 1 needs no NOXMFD core change. This plan was checked against NOAutopilot 5.5.3.
+section 8). Phase 1 needs no NOXMFD core change. This plan was checked against NOAutopilot 5.5.3;
+route coupling was checked against 6.0.1, whose `TargetTrack` and `DefaultTrkRollLimit` are 5.x's
+`TargetCourse` and `DefaultCRLimit` renamed (the bridge looks up either).
 
 ## Source ticket
 
@@ -173,22 +176,41 @@ sync.
   `RefreshNavVisuals()` so NOAutopilot's own map markers match.
 - **Re-sync**: whenever `Api.RouteRevision` changes (a WPT edit, route switch, or proximity
   advance), rebuild the queue the same way.
-- **Advance mirroring**: when `NavQueue[0]` stops matching the expected `Points[NextIndex]`,
-  NOAutopilot has reached it first. The extension calls `Api.SetActiveRouteNextIndex(NextIndex + 1)`,
-  which bumps `RouteRevision` and triggers a normal re-sync. Comparing the head point rather than
-  the queue length also handles "Cycle wp" re-appending.
+- **Advance mirroring**: the extension compares `NavQueue` with what it last wrote, every frame.
+  If the queue is exactly that copy minus its head, NOAutopilot dropped the head (reached within
+  `NavReachDistance`, passed within `NavPassedDistance`, or SKIP), and the extension calls
+  `Api.SetActiveRouteNextIndex(head + 1)`, with the head's index taken from the last sync rather
+  than the live `NextIndex`, so a NOXMFD proximity advance in the same frame isn't counted twice.
+  The index bump changes `RouteRevision` and triggers a normal re-sync. Any other difference is a
+  pilot edit (a map right-click, F8's UNDO), and the queue is overwritten from the route; an
+  emptied queue (F8's CLEAR) decouples.
+- **Points behind the aircraft**: NOAutopilot drops a point behind the aircraft and within 10 km
+  every frame, autopilot engaged or not. Coupling or flying direct to such a point therefore moves
+  straight on to the following one, as NOAutopilot's own nav does. Holding `NavPassedDistance` off
+  instead would let a point inside the turn circle make the aircraft orbit it.
 - **Direct-to**: `SetActiveRouteNextIndex(i)`, then the re-sync does the rest. The HUD waypoint cue
   and WPT page follow automatically.
 - **Loop**: while coupled, the nav panel's CYCLE WP toggle becomes LOOP. When NOXMFD reports the
   route complete (`NextIndex == Points.Length`) with LOOP on, the extension calls
-  `SetActiveRouteNextIndex(0)`. NOAutopilot's own Cycle wp is held off while coupled and restored
-  to the pilot's setting on decouple and on plugin shutdown, since `Plugin.NavCycle` persists to
-  NOAutopilot's config file.
+  `SetActiveRouteNextIndex(0)`. NOAutopilot's own Cycle wp is held off while coupled (re-applied
+  every frame; turning it on from F8 changes the value restored later) and restored to the pilot's
+  setting on decouple and on plugin shutdown, since `Plugin.NavCycle` persists to NOAutopilot's
+  config file. A crash while coupled leaves it off.
+- **Resuming nav**: an emptied queue turns NOAutopilot's nav off. When a re-sync puts points back
+  into an empty queue (a loop, a direct-to after the route ended, a route activated after coupling
+  with none), nav is turned back on with the default bank limit.
 - **Decouple**: clear `NavQueue`, set `NavEnabled = false`, and leave NOXMFD's route alone.
 - **Altitude**: NOXMFD waypoints have no altitude. Queue points take the current target altitude
-  (`TargetAlt`, or current altitude if none), and nav steers laterally only.
+  (`TargetAlt`, or current altitude if none), and nav steers laterally only. The height still
+  matters: NOAutopilot's "passed" test is a 3D dot product, so points at height 0 under a climbing
+  aircraft would count as passed early.
 - **Map edits**: while coupled, a right-click waypoint on NOAutopilot's map is overwritten on the
-  next re-sync. The page shows this (decision 3).
+  next frame (decision 3).
+- **Leaving the aircraft**: with no player aircraft (mission end, respawn) the extension decouples.
+- **Page**: the nav strip gains a lit **ROUTE** button that couples and decouples (disabled with no
+  route or steer point). While coupled, the route name and `n/N` next waypoint replace the pips,
+  CYCLE WP drives LOOP, SKIP drops the head (mirrored as an advance), UNDO is hidden, and ✕
+  decouples. Direct-to stays on NOXMFD's RTD/WPT/MAP pages, which the re-sync follows.
 
 ### Nav queue on NOXMFD's MAP
 
@@ -199,7 +221,8 @@ queue is the WPT route MAP already draws, so the overlay is hidden.
 
 This needs a new NOXMFD core surface: extensions can recolor or highlight units on MAP today, but
 can't draw their own points or lines. The API shape (for example
-`Api.SetMapOverlay(id, points, style)`) is designed in NOXMFD when this item starts.
+`Api.SetMapOverlay(id, points, style)`) is designed in NOXMFD when this item starts. It is
+deferred: route coupling ships without it.
 
 ## Architecture
 
@@ -258,11 +281,9 @@ can't draw their own points or lines. The API shape (for example
     sit on familiar tapes instead of in separate tiles. Icons and lit pushbuttons carry the state,
     which keeps text to short labels.
 
-## Open questions
-
-- **Phase 2 route view in the HUD tapes layout.** The nav strip is one row high. Where the WPT
-  route view and COUPLE/DIRECT-TO/LOOP/DECOUPLE fit (a taller strip, a second page, or a panel
-  that replaces the tapes while coupled) is decided when Phase 2 starts.
+12. **Route coupling lives in the nav strip.** One ROUTE button instead of a route list or a
+    panel over the tapes: NOXMFD's RTD, WPT and MAP pages already list the route and fly direct
+    to a waypoint, and the coupling follows them, so the AP page doesn't repeat them.
 
 ## Out of scope
 

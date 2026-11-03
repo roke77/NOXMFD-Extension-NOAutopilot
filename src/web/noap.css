@@ -146,21 +146,29 @@ button:not(:disabled):active { background-color: rgba(var(--no-green-rgb), 0.18)
 
 /* ── nav strip ─────────────────────────────────────────────────────────── */
 .nav-strip {
-  height: 68px; display: flex; align-items: center; gap: 10px;
+  height: 68px; display: flex; align-items: center; gap: 8px;
   border-top: 1px solid var(--no-panel-border); border-bottom: 1px solid var(--no-panel-border);
 }
-.pips { width: 140px; height: 30px; flex: none; }
+.pips { width: 110px; height: 30px; flex: none; }
+.nav-strip .lit-row { padding: 0 10px; }
 .pip-line { stroke: var(--no-green); stroke-width: 2; }
 .pip { fill: var(--no-bg); stroke: var(--no-green); stroke-width: 2; }
 .pip.next { fill: var(--no-amber); stroke: none; }
 .pip-more, .pip-none { fill: var(--no-green-dim); font-size: 13px; font-family: var(--no-font); }
-.nav-next { display: flex; align-items: baseline; gap: 8px; color: var(--no-amber); }
+.nav-next { white-space: nowrap; display: flex; align-items: baseline; gap: 8px; color: var(--no-amber); }
 .nav-next-d { font-size: 24px; }
 .nav-next-t { font-size: 16px; }
-.nav-total { display: flex; align-items: baseline; gap: 8px; color: var(--no-green-dim); }
+.nav-total { white-space: nowrap; display: flex; align-items: baseline; gap: 8px; color: var(--no-green-dim); }
 .nav-total-d { font-size: 18px; }
 .nav-total-t { font-size: 14px; }
 .grow { flex: 1; }
+/* While coupled the route label takes the pips' place; it ellipsizes rather than push the buttons. */
+.route-lbl { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.route-lbl[hidden] { display: none; }
+.route-name, .route-next { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.route-name { font-size: 13px; letter-spacing: 1px; color: var(--no-green-dim); }
+.route-next { font-size: 17px; color: var(--no-amber); }
+body.coupled .pips, body.coupled .grow, body.coupled #undo { display: none; }
 
 /* ── system toggles ────────────────────────────────────────────────────── */
 .toggles { display: flex; gap: 8px; }

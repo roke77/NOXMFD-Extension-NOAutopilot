@@ -26,6 +26,7 @@ FLYING = {
     "air": True,
     "cur": {"alt": 5559.6, "spd": 211.95, "mach": 0.66, "crs": 47.2, "roll": 24.6, "vs": 8.1},
     "navq": {"n": 4, "next": 22965, "total": 164272, "brg": 52},
+    "route": {"on": False, "loop": False, "avail": True, "name": "CAP NORTH", "idx": 2, "n": 5, "next": "CAP ANCHOR W"},
 }
 SCENARIOS = {
     "flying": FLYING,
@@ -39,6 +40,10 @@ SCENARIOS = {
     "missing": {"link": "missing", "ver": ""},
     "incompatible": {"link": "incompatible", "ver": "6.0.0"},
     "broken": {**FLYING, "broken": True},
+    "coupled": {**FLYING, "cycle": False, "navq": {"n": 3, "next": 22965, "total": 98000, "brg": 52},
+                "route": {**FLYING["route"], "on": True}},
+    "route-done": {**FLYING, "nav": False, "cycle": False, "navq": {"n": 0},
+                   "route": {**FLYING["route"], "on": True, "idx": 5, "next": None}},
 }
 state = {"s": "flying", "metric": False}
 live = {}          # scenario copy the command endpoint mutates, re-seeded on /scenario
@@ -74,6 +79,8 @@ def simulate(c):
             live["mach"] = not live.get("mach")
             if t.get("spd", -1) >= 0:
                 t["spd"] = cur.get("mach") if live["mach"] else cur.get("spd")
+        elif what == "cycle" and live.get("route", {}).get("on"):
+            live["route"]["loop"] = not live["route"].get("loop")
         else:
             key = {"gcas": "gcas", "abbrk": "xthr", "jam": "jam", "fbw": "fbw", "nav": "nav", "cycle": "cycle"}[what]
             live[key] = not live.get(key)
@@ -83,6 +90,14 @@ def simulate(c):
             live["nav"] = False
             q.pop("next", None); q.pop("total", None)
     elif cmd == "nav-clear":
+        live["navq"], live["nav"] = {"n": 0}, False
+        live.get("route", {})["on"] = False
+    elif cmd == "couple":
+        r = live.setdefault("route", {})
+        r["on"], live["nav"] = True, True
+        live["navq"] = {"n": r.get("n", 0) - r.get("idx", 0), "next": 22965, "total": 98000, "brg": 52}
+    elif cmd == "decouple":
+        live.get("route", {})["on"] = False
         live["navq"], live["nav"] = {"n": 0}, False
     elif cmd == "als":
         live["als"] = not live.get("als")

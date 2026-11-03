@@ -119,14 +119,14 @@ function bankScale(roll, limit, pend) {
 function pips(n) {
   if (!n) { $('pips-g').innerHTML = '<text class="pip-none" x="0" y="20">NO WPTS</text>'; return; }
   const shown = n > 4 ? 3 : n;
-  let g = shown > 1 ? `<line class="pip-line" x1="14" y1="15" x2="${14 + (shown - 1) * 36}" y2="15"/>` : '';
+  let g = shown > 1 ? `<line class="pip-line" x1="12" y1="15" x2="${12 + (shown - 1) * 30}" y2="15"/>` : '';
   for (let i = 0; i < shown; i++) {
-    const x = 14 + i * 36;
+    const x = 12 + i * 30;
     g += i === 0
       ? `<path class="pip next" d="M${x} 5l10 10-10 10-10-10z"/>`
       : `<path class="pip" d="M${x} 8l7 7-7 7-7-7z"/>`;
   }
-  if (n > 4) g += `<text class="pip-more" x="${14 + 3 * 36 - 8}" y="20">+${n - 3}</text>`;
+  if (n > 4) g += `<text class="pip-more" x="${12 + 2 * 30 + 12}" y="20">+${n - 3}</text>`;
   $('pips-g').innerHTML = g;
 }
 
@@ -232,7 +232,21 @@ function render(s, metric) {
   $('nav-next-eta').textContent = q.next != null ? F.eta(q.next, c.spd) : '';
   $('nav-total').textContent = 'Σ ' + (q.total != null ? F.dist(q.total, metric) : F.DASH);
   $('nav-total-eta').textContent = q.total != null ? F.eta(q.total, c.spd) : '';
-  lit('cycle', s.cycle);
+  // Coupled to NOXMFD's route: the label replaces the pips, CYCLE becomes LOOP and ✕ decouples.
+  const rt = s.route || {}, coupled = !!rt.on;
+  document.body.classList.toggle('coupled', coupled);
+  lit('route', coupled);
+  $('route').disabled = !coupled && !rt.avail;
+  $('route-lbl').hidden = !coupled;
+  if (coupled) {
+    $('route-name').textContent = rt.stpt ? 'STEER POINT' : rt.name || 'NO ROUTE';
+    $('route-next').textContent = rt.next != null
+      ? (rt.stpt ? '' : (rt.idx + 1) + '/' + rt.n + ' ') + rt.next
+      : rt.n ? 'ROUTE COMPLETE' : F.DASH;
+  }
+  lit('cycle', coupled ? rt.loop : s.cycle);
+  $('cycle').setAttribute('aria-label', coupled ? 'Loop the route' : 'Cycle waypoints');
+  $('clear').setAttribute('aria-label', coupled ? 'Stop flying the route' : 'Clear all waypoints');
 
   // System toggles
   const g = F.gcasState(s);
@@ -389,6 +403,7 @@ on('apply', apply);
 on('sync', sync);
 on('nav', toggle('nav'));
 on('cycle', toggle('cycle'));
+on('route', () => post({ cmd: last.route && last.route.on ? 'decouple' : 'couple' }));
 on('skip', () => post({ cmd: 'nav-skip' }));
 on('undo', () => post({ cmd: 'nav-undo' }));
 on('clear', () => post({ cmd: 'nav-clear' }));

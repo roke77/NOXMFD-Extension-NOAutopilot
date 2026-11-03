@@ -56,9 +56,13 @@ namespace NoApModule
                 case "crs-hold": return CourseHold();
                 case "crs-clear": CourseClear(); return true;
                 case "toggle": return Toggle(e.what);
+                // While coupled, SKIP's dropped head point is mirrored to NOXMFD as an advance like any
+                // other (NoApRoute); UNDO has no meaning on a copy of NOXMFD's route, and CLEAR decouples.
                 case "nav-skip": RemoveNav(first: true); return true;
-                case "nav-undo": RemoveNav(first: false); return true;
-                case "nav-clear": ClearNav(); return true;
+                case "nav-undo": if (NoApRoute.Coupled) return false; RemoveNav(first: false); return true;
+                case "nav-clear": if (NoApRoute.Coupled) NoApRoute.Decouple(); else ClearNav(); return true;
+                case "couple": return NoApRoute.Couple();
+                case "decouple": NoApRoute.Decouple(); return true;
                 case "als": Autoland(); return true;
                 default: return false;
             }
@@ -101,7 +105,7 @@ namespace NoApModule
 
         // Course hold and nav steer within TargetRoll as a bank limit; a zero or unset limit would
         // never turn, so they get NOAutopilot's configured default, as its F8 Apply and nav toggle do.
-        private static void DefaultBankLimitIfSteering()
+        internal static void DefaultBankLimitIfSteering()
         {
             float roll = NoApBridge.TargetRoll;
             if ((NoApBridge.NavEnabled || NoApBridge.TargetCourse >= 0f) && (roll == -999f || roll == 0f))
@@ -171,7 +175,11 @@ namespace NoApModule
                     DefaultBankLimitIfSteering();
                     NoApBridge.SyncMenuValues();
                     break;
-                case "cycle": NoApBridge.NavCycle.Value = !NoApBridge.NavCycle.Value; break;
+                // While coupled, NOAutopilot's Cycle wp is held off and the button loops NOXMFD's route.
+                case "cycle":
+                    if (NoApRoute.Coupled) NoApRoute.ToggleLoop();
+                    else NoApBridge.NavCycle.Value = !NoApBridge.NavCycle.Value;
+                    break;
                 default: return false;
             }
             return true;

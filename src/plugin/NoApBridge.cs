@@ -255,7 +255,17 @@ namespace NoApModule
                     nav.Num("next", next).Num("total", total).Num("brg", (brg + 360f) % 360f);
                 }
             }
-            return j.Obj("navq", nav).ToString();
+            j.Obj("navq", nav);
+
+            // Route coupling: NOXMFD's active route (or steer point) and where it stands.
+            var route = new JsonObj().Bool("on", NoApRoute.Coupled).Bool("loop", NoApRoute.Loop).Bool("avail", NoApRoute.Available);
+            if (NoApRoute.Route is NOXMFD.NavRoute r)
+            {
+                route.Str("name", r.Name).Num("idx", r.NextIndex).Num("n", r.Points.Length);
+                if (r.NextIndex < r.Points.Length) route.Str("next", r.Points[r.NextIndex].Name);
+            }
+            else if (NoApRoute.SteerPoint is NOXMFD.NavPoint p) route.Bool("stpt", true).Str("next", p.Name);
+            return j.Obj("route", route).ToString();
         }
 
         private static float FlatDistance(Vector3 a, Vector3 b) => new Vector2(b.x - a.x, b.z - a.z).magnitude;

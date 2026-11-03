@@ -1,3 +1,4 @@
+using System;
 using BepInEx;
 using BepInEx.Logging;
 using UnityEngine;
@@ -8,8 +9,8 @@ namespace NoApModule
     // public Api, reads NOAutopilot through NoApBridge, and applies the page's commands through
     // NoApCommands (docs/noautopilot-plan.md).
     [BepInPlugin("com.roque.noautopilot-module", "NOXMFD: NOAutopilot Extension", MyPluginInfo.PLUGIN_VERSION)]
-    // 0.58.0 carries extension API version 7 (the WPT route reads). Phase 1 doesn't use them, but
-    // pinning it now keeps Phase 2 from raising the requirement (plan, "Architecture").
+    // 0.58.0 carries extension API version 7: the WPT route reads and SetActiveRouteNextIndex that
+    // NoApRoute couples NOAutopilot to.
     [BepInDependency("com.roque.NOXMFD", "0.58.0")]
     // Soft: load after NOAutopilot when it's installed, but still load without it.
     [BepInDependency(NoApBridge.NoApGuid, BepInDependency.DependencyFlags.SoftDependency)]
@@ -38,9 +39,24 @@ namespace NoApModule
 
         private void Update()
         {
-            if (!_registered || Time.unscaledTime < _nextPublish) return;
+            if (!_registered) return;
+            // Every frame, not at the publish rate: NOAutopilot drops reached points from its own
+            // per-frame update, and each drop has to reach NOXMFD's route before the next one.
+            if (NoApBridge.IsLinked)
+            {
+                try { NoApRoute.Tick(); }
+                catch (Exception ex) { NoApBridge.Fail("route coupling", ex); }
+            }
+            if (Time.unscaledTime < _nextPublish) return;
             _nextPublish = Time.unscaledTime + PublishInterval;
             NOXMFD.Api.PublishSlice(ExtId, NoApBridge.BuildSliceJson());
+        }
+
+        // Hands "Cycle wp" back to the pilot's setting, since NOAutopilot persists it to its config.
+        private void OnDestroy()
+        {
+            try { NoApRoute.Decouple(); }
+            catch (Exception ex) { Log?.LogWarning($"[NOAP] decoupling on shutdown failed: {ex.Message}"); }
         }
     }
 }

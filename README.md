@@ -43,6 +43,9 @@ Built entirely through NOXMFD's public extension API (see
 - **AP ring** to engage and disengage, and **HOLD** / **CLR** for the course.
 - **NOAutopilot's nav mode:** distance and ETA to the next waypoint and to the end, plus NAV,
   CYCLE WP, SKIP, UNDO and CLEAR. Waypoints are placed on the in-game map, as in NOAutopilot.
+- **Fly NOXMFD's route:** **ROUTE** hands NOXMFD's active WPT route (or your selected steer point)
+  to NOAutopilot's nav mode. Route progress stays in NOXMFD, so the HUD cue, RTD and WPT pages
+  follow, and a direct-to or route edit on those pages redirects the autopilot.
 - **Toggles:** GCAS (with warning and PULL UP), A/THR, AB/BRK, JAM, FBW OFF (single player) and ALS
   autoland. FBW OFF and ALS are guarded: a confirming second tap turns them on, one tap turns them
   back off.
@@ -58,8 +61,16 @@ Built entirely through NOXMFD's public extension API (see
 1. In NOXMFD, open **EXT → AUTO PILOT**.
 2. Step or type the targets you want (they turn amber), then press **APPLY** to engage with them,
    or tap the **AP** ring to engage (it holds your current altitude if no altitude target is set).
-3. To fly waypoints, place them on the in-game map with NOAutopilot (right-click), then turn on
-   **NAV**.
+3. To fly waypoints, either:
+   - tap **ROUTE** to fly NOXMFD's active route (or selected steer point), or
+   - place waypoints on the in-game map with NOAutopilot (right-click), then turn on **NAV**.
+
+While **ROUTE** is lit, the nav strip shows the route's name and next waypoint. The loop button
+loops the route instead of NOAutopilot's own waypoints, SKIP moves on to the following waypoint,
+and ✕ (or ROUTE again) stops flying the route. To fly direct to another waypoint, pick it on
+NOXMFD's RTD, WPT or MAP page. Waypoints placed on the in-game map while ROUTE is lit are
+replaced by the route. A waypoint behind you and within 10 km is skipped, as in NOAutopilot's own
+nav mode.
 
 Tapping the speed or altitude target opens the keypad:
 
