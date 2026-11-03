@@ -212,6 +212,22 @@ sync.
   CYCLE WP drives LOOP, SKIP drops the head (mirrored as an advance), UNDO is hidden, and ✕
   decouples. Direct-to stays on NOXMFD's RTD/WPT/MAP pages, which the re-sync follows.
 
+Live-game checks for route coupling, against NOAutopilot 6.0.x:
+
+1. ROUTE with an active route: NOAutopilot's map shows the route's remaining points, nav turns on,
+   and the aircraft turns to the next waypoint with the default bank limit.
+2. Reaching a waypoint (2.5 km): NOXMFD's HUD cue, RTD and WPT move to the following waypoint in
+   step with the autopilot, and no waypoint is skipped.
+3. Direct-to on RTD, and a waypoint added or moved on WPT/MAP: the autopilot redirects.
+4. SKIP moves both to the following waypoint; the X button and ROUTE decouple and leave NOXMFD's
+   route as is.
+5. Route end: without LOOP, nav turns off at the last waypoint; with LOOP, the route restarts at
+   waypoint 1 and nav stays on.
+6. A right-click on NOAutopilot's map while coupled is replaced by the route.
+7. NOAutopilot's Cycle wp is off while coupled and back to its previous value after decoupling,
+   after mission end, and after quitting the game while coupled.
+8. With only a steer point selected: ROUTE flies to it, and the page shows STEER POINT.
+
 ### Nav queue on NOXMFD's MAP
 
 When not coupled, NOAutopilot flies waypoints placed on the in-game map, which NOXMFD's MAP page
